@@ -10,11 +10,11 @@ My contribution to:
 
 | Day | Theme | Data | my contribution 
 | :---: | :---: | :--- | :--- 
-| 1 | part-to-whole | ... | ![png](data/Edition_2022/day1_part_to_whole/day1_part-to-whole.png)
-| 2 | pictogram | ... | ![png](data/Edition_2022/day2_pictogram/day2_pictogram.png)
-| 3 | historical | ... | ![png](data/Edition_2022/day3_historical/day3_historical.png)
-| 4 | flora | ... | ![png](data/Edition_2022/day4_flora/day4_flora.png)
-| 5 | slope | ... | ![png](data/Edition_2022/day5_slope/day5_slope.png)
+| 1 | part-to-whole | [Collegiate Sports Budgets](https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-03-29/readme.md) | ![png](data/Edition_2022/day1_part_to_whole/day1_part-to-whole.png)
+| 2 | pictogram | [Accidental deaths](https://www.statista.com/statistics/529312/sweden-number-of-accidental-deaths-by-type-and-gender/) | ![png](data/Edition_2022/day2_pictogram/day2_pictogram.png)
+| 3 | historical | [DuBoisChallenge 2022 - N°8](https://github.com/ajstarks/dubois-data-portraits/tree/master/challenge/2022) | ![png](data/Edition_2022/day3_historical/day3_historical.png)
+| 4 | flora | Iris dataset | ![png](data/Edition_2022/day4_flora/day4_flora.png)
+| 5 | slope | [Digital Publications](https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-04-05/readme.md) | ![png](data/Edition_2022/day5_slope/day5_slope.png)
 | 6 | data day | [OWID](https://ourworldindata.org/) | ![png](data/Edition_2022/day6_data_day/day6_data_day.png)
 | 7 | physical | ... | ![png](data/Edition_2022/day7_physical/day7_physical.png)
 | 8 | mountains | ... | ![png](data/Edition_2022/day8_mountains/day8_mountains.png)
