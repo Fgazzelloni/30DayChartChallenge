@@ -1,11 +1,12 @@
 # 30DayChartChallenge
 
-My contribution to:
+My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayChartChallenge/Edition2022)
 
-[#30DayChartChallenge-Edition2022](https://github.com/30DayChartChallenge/Edition2022)
+# `#30DayChartChallenge Topics by Day`
+<p align="center">
+  <img width="960" height="400" src="https://pbs.twimg.com/media/FPKZks-WUAQXHWB?format=jpg&name=4096x4096">
+</p>
 
-
-# #30DayChartChallenge Topics by Day
 
 
 | Day | Theme | Data | my contribution 
