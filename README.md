@@ -19,7 +19,7 @@ My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayC
 | 6 | data day | [OWID](https://ourworldindata.org/) | ![png](data/Edition_2022/day6_data_day/day6_data_day.png)
 | 7 | physical | ... | ![png](data/Edition_2022/day7_physical/day7_physical.png)
 | 8 | mountains | ... | ![png](data/Edition_2022/day8_mountains/day8_mountains.png)
-| 9 | statistics | ... | ![png](data/Edition_2022/day9_statistics/day9_statistics.png)
+| 9 | statistics | ![png](data/Edition_2022/day9_statistics/day9_statistics_v2.png) | ![png](data/Edition_2022/day9_statistics/day9_statistics.png)
 | 10 | experimental | ... | ![png](data/Edition_2022/day10_experimental/day10_experimental.png)
 | 11 | circular | ... | ![png](data/Edition_2022/day11_circular/day11_circular.png)
 | 12 | theme day | The Economist | ![png](data/Edition_2022/day12_theme_day/day12_theme_day.png)
