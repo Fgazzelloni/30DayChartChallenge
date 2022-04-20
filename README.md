@@ -27,7 +27,7 @@ My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayC
 | 14 | 3-dimensional | ... | ![png](data/Edition_2022/day14_3-dimensional/day14_3-dimensional.png)
 | 15 | multivariate | ... | ![png](data/Edition_2022/day15_multivariate/day15_multivariate.png)
 | 16 | environment | ... | ![png](data/Edition_2022/day16_environment/day16_environment.png)
-| 17 | connections | ... | ![png](data/Edition_2022/day17_connections/day17_connections.png)
+| 17 | connections | ... | ![png](data/Edition_2022/day17_connections/bird-network.png)
 | 18 | data day | [OECD](https://data.oecd.org/) | ![png](data/Edition_2022/day18_data_day/day18_data_day.png9)
 | 19 | global change | ... | ![png](data/Edition_2022/day19_global_change/day19_global_change.png)
 | 20 | new tool | ... | ![png](data/Edition_2022/day20_new_tool/day20_new_tool.png)
