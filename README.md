@@ -7,7 +7,7 @@ My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayC
   <img width="960" height="400" src="https://pbs.twimg.com/media/FPKZks-WUAQXHWB?format=jpg&name=4096x4096">
 </p>
 
-![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
+
 
 | Day | Theme | Data | my contribution 
 | :---: | :---: | :--- | :--- 
@@ -32,7 +32,7 @@ My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayC
 | 19 | global change | ... | ![png](data/Edition_2022/day19_global_change/day19_global_change.png)
 | 20 | new tool | ... | ![png](data/Edition_2022/day20_new_tool/day20_new_tool.png)
 | 21 | down/upwards | ... | ![png](data/Edition_2022/day21_down_upwards/day21_down_upwards.png)
-| 22 | animation | ... | ![](data/Edition_2022/day22_animation/day22_animation.gif)
+| 22 | animation | ![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)| ![Alt Text](data/Edition_2022/day22_animation/day22_animation.gif)
 | 23 | tiles | ... | ![png](data/Edition_2022/day23_tiles/day23_tiles.png)
 | 24 | theme day | Financial Times | ![png](data/Edition_2022/day24_theme_day/day24_theme_day.png)
 | 25 | trend | ... | ![png](data/Edition_2022/day25_trend/day25_trend.png)
