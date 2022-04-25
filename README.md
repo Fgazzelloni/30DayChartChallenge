@@ -7,7 +7,7 @@ My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayC
   <img width="960" height="400" src="https://pbs.twimg.com/media/FPKZks-WUAQXHWB?format=jpg&name=4096x4096">
 </p>
 
-
+![Alt Text](https://media.giphy.com/media/vFKqnCdLPNOKc/giphy.gif)
 
 | Day | Theme | Data | my contribution 
 | :---: | :---: | :--- | :--- 
