@@ -40,4 +40,4 @@ My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayC
 | 27 | future | [NCDC-NOAA](https://www.ncei.noaa.gov/orders/cdo/2960933.csv)| ![png](data/Edition_2022/day27_future/day27_future.png)
 | 28 | deviations | [Kaggle Hidden Gems](https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-04-26/readme.md) | ![png](data/Edition_2022/day28_deviations/day28_deviations.png)
 | 29 | storytelling | [Solar/Wind utilities](https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-05-03/readme.md) | ![png](data/Edition_2022/day29_storytelling/day29_storytelling.png)
-| 30 | data day | [UN Population](https://population.un.org/wpp/) | ![png](data/Edition_2022/day30_data_day/day30_data_day.png)
+| 30 | data day | [UN Population](https://population.un.org/wpp/) | ![png](data/Edition_2022/day30_un_pop/day30_dataday_un.png)
