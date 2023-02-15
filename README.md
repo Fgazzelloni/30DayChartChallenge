@@ -1,6 +1,9 @@
 # 30DayChartChallenge
 
-My contribution to: [#30DayChartChallenge-Edition2022](https://github.com/30DayChartChallenge/Edition2022)
+#### This is a competition that takes place every year in November. In this repository you'll find all my contributions to: [#30DayChartChallenge-Edition2022](https://github.com/30DayChartChallenge/Edition2022), the original repository for year 2022.
+
+
+### Last year contributions (2021 competition): [chart challenge 2021](https://github.com/Fgazzelloni/rstats-chart-challenge-2021)
 
 # `#30DayChartChallenge Topics by Day`
 <p align="center">
