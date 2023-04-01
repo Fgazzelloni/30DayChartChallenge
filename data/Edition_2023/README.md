@@ -5,8 +5,7 @@
 # `#30DayChartChallenge Topics by Day`
 
 <p align="center">
-  <img width="960" height="400" src="https://pbs.twimg.com/media/FqjAGewXsAAWbRy?format=jpg&name=4096x4096">
+
+<img src="https://pbs.twimg.com/media/FqjAGewXsAAWbRy?format=jpg&amp;name=4096x4096" width="960" height="400"/>
+
 </p>
-
-
-
