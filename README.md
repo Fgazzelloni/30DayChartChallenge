@@ -1,16 +1,18 @@
 # 30DayChartChallenge
 
-#### This is a competition that takes place every year in April. In this repository you'll find all my contributions to: [#30DayChartChallenge-Edition2022](https://github.com/30DayChartChallenge/Edition2022), the original repository for year 2022.
+## This is a competition that takes place every year in April. In this repository you'll find all my contributions to: [#30DayChartChallenge](https://fgazzelloni.quarto.pub/30daychartchallenge/).
 
 
-### Last year contributions (2021 competition): [chart challenge 2021](https://github.com/Fgazzelloni/rstats-chart-challenge-2021)
+#### Contributions (2021 competition): [chart challenge 2021](https://github.com/Fgazzelloni/rstats-chart-challenge-2021)
+#### Contributions (2022 competition): [chart challenge 2022](https://github.com/Fgazzelloni/30DayChartChallenge/tree/main/data/Edition_2022)
 
 # `#30DayChartChallenge Topics by Day`
 <p align="center">
-  <img width="960" height="400" src="https://pbs.twimg.com/media/FPKZks-WUAQXHWB?format=jpg&name=4096x4096">
+  <img width="960" height="400" src="https://pbs.twimg.com/media/FqjAGewXsAAWbRy?format=jpg&amp;name=4096x4096" width="960" height="400">
 </p>
 
 
+### These are the contribution for 2022
 
 | Day | Theme | Data | my contribution 
 | :---: | :---: | :--- | :--- 
