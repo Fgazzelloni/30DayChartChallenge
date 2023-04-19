@@ -1,0 +1,154 @@
+---
+title: "day 18 eurosat"
+author: "Federica Gazzelloni"
+format: html
+editor: visual
+---
+
+To cite Federica's work please use:
+
+> Gazzelloni F. (2023), Data Visualization: Eurosat hlth_hlye data
+
+```{r warning=FALSE,message=FALSE}
+library(tidyverse)
+# install.packages("eurostat")
+library(eurostat)
+library(sf)
+library(countrycode)
+```
+
+```{r}
+id <- search_eurostat("Healthy life years by sex")
+id <- id[1,]
+id
+# save(id,file="id.RData")
+```
+
+```{r}
+data <- get_eurostat("hlth_hlye",unit="PC")
+# save(data,file="data.RData")
+```
+
+```{r}
+df <- data%>%
+  filter(indic_he=="HLY_PC_0")%>%
+  mutate(year=year(time))%>%
+  select(geo, year,sex,values)%>%
+  mutate(sex=case_when(sex=="F"~"Female",
+                       sex=="M"~"Male",
+                       TRUE~"Both"))
+df%>%head
+```
+
+```{r}
+my_countries_abbr <- unique(df$geo)
+```
+
+```{r}
+# countrycode::codelist%>%names
+
+my_countries <- countrycode::codelist %>%
+  count(country.name.en, iso2c) %>%
+  filter(iso2c %in% my_countries_abbr)%>%
+  rename(region=country.name.en)
+
+my_countries_names <- unique(my_countries$region)
+```
+
+```{r}
+df_countries <- df%>%
+  inner_join(my_countries,by=c("geo"="iso2c"))
+
+df_countries%>%head
+```
+
+```{r}
+df_geometry <- map_data("world") %>%
+  filter(region %in% my_countries_names) %>%
+  group_by(group) %>%
+  sf::st_as_sf(coords = c(1, 2), crs = 4326) %>%
+  summarise(geometry = st_combine(geometry)) %>%
+  st_cast("POLYGON") 
+
+df_geometry %>% head
+```
+
+```{r}
+polygons <- rnaturalearth::ne_countries(returnclass = "sf")
+
+ggplot()+
+  geom_sf(data=polygons)+
+  geom_sf(data=df_geometry,aes(geometry=geometry),color="red")
+```
+
+```{r}
+df_coords <- map_data("world") %>%
+  filter(region %in% my_countries_names)%>%
+  select(region,group)
+
+df_full <- df_geometry%>%
+  inner_join(df_coords,by="group") %>% 
+  merge(df_countries,by="region")
+
+
+austria <- df_full%>%
+  filter(region=="Austria",year==2020)
+```
+
+```{r}
+polygons <- rnaturalearth::ne_countries(scale = 110, 
+                                        type = 'map_units',
+                                        returnclass = 'sf')
+
+ggplot()+
+  geom_sf(data=polygons)+
+  geom_sf(data=df_geometry,aes(geometry=geometry),fill="beige")+
+  geom_sf(data=austria,aes(geometry=geometry,fill=values))+
+  coord_sf()
+```
+
+Zooming in
+
+```{r}
+# polygons%>%View
+
+my_countries_names[30]<- "England"
+my_countries_names[31]<- "N. Ireland"
+my_countries_names[32]<- "Scotland"
+my_countries_names[33]<- "Wales"
+eu <- polygons[polygons$name %in% my_countries_names,]
+ggplot() + geom_sf(data = eu) + theme_bw()
+```
+
+```{r}
+eu_qualy <- df_full%>%
+  filter(year==2020)
+```
+
+```{r cache=TRUE}
+map <- ggplot()+
+  geom_sf(data=eu)+
+  geom_sf(data=df_geometry,aes(geometry=geometry),fill="beige")+
+  geom_sf(data=eu_qualy,aes(geometry=geometry,fill=values))+
+  coord_sf()+
+  facet_wrap(~sex)
+
+map
+```
+
+```{r}
+map +
+  scale_fill_gradient(low = "white",high = "#a60845") +
+  labs(title="Healthy life years by sex (2020) %",
+       caption="DataSource: Eurosat - Healthy life years by sex\n#30DayChartChallenge day18 Eurosat | DataViz: Federica Gazzelloni") +
+  ggthemes::theme_map(base_size = 12, base_family = "Roboto Condensed")+
+  theme(strip.background = element_rect(color = "#a60845",fill="#a60845"),
+        strip.text = element_text(color="white"),
+        legend.position = "bottom",
+        plot.title = element_text(color="#a60845",size=20),
+        plot.caption = element_text(color="#a60845",size=12))
+```
+
+```{r}
+ggsave("map.png",width = 7,height = 5)
+```
