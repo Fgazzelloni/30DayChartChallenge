@@ -1,0 +1,143 @@
+---
+title: "day19: Anthropocene"
+author: "Federica Gazzelloni & Chat GPT"
+format: html
+editor: visual
+---
+
+
+> Gazzelloni F. (2023), Data Visualization: Yellow-Legged Frog Anthropocene
+
+
+```{r warning=FALSE,message=FALSE}
+library(tidyverse)
+
+library(spocc)
+rana_sierrae <- occ(query = "Rana sierrae",
+              from = "gbif",
+               limit = 1000,
+               date = c('1900-01-01','2020-01-01'),
+               has_coords = TRUE
+              )
+rana_muscosa <- occ(query = "Rana muscosa",
+               from = "gbif",
+               limit = 1000,
+               date = c('1900-01-01','2020-01-01'),
+               has_coords = TRUE
+               )
+```
+
+```{r}
+rana_sierrae <- data.frame(rana_sierrae$gbif$data)
+rana_muscosa <- data.frame(rana_muscosa$gbif$data)
+```
+
+
+```{r}
+rana_sierrae <- rana_sierrae %>%
+  select(
+year="Rana_sierrae.year",                            
+month="Rana_sierrae.month",                           
+day="Rana_sierrae.day",                             
+date="Rana_sierrae.eventDate",
+long="Rana_sierrae.longitude",                      
+lat="Rana_sierrae.latitude"
+)
+
+rana_muscosa <- rana_muscosa %>%
+  select(
+year="Rana_muscosa.year",                            
+month="Rana_muscosa.month",                           
+day="Rana_muscosa.day",                             
+date="Rana_muscosa.eventDate",
+long="Rana_muscosa.longitude",                      
+lat="Rana_muscosa.latitude"
+)
+
+frog_data <- rbind(rana_sierrae%>%
+  mutate(type=rep("rana_sierrae",736)),
+rana_muscosa%>%
+  mutate(type=rep("rana_muscosa",1000))
+)
+```
+
+```{r}
+frog_data_yr <- rana_muscosa %>%
+  group_by(year) %>%
+  reframe(population = n())
+```
+
+
+```{r}
+# Plot population over time
+ggplot(frog_data_yr, aes(x = year, y = population,color=population))+
+                         #group=factor(type),
+                         #color=type)) +
+  geom_line(linewidth=1) +
+  labs(title = "Decline in Sierra Nevada Yellow-Legged Frog Population",
+       x = "Year",
+       y = "Population",
+       caption = "DataSource: GBIF | #30DayChartChallenge Day19: Anthropocene\nDataViz: Federica Gazzelloni") +
+  geom_vline(xintercept = 2000,linetype="dashed",linewidth=0.5)+
+  geom_vline(xintercept = 2014,linetype="dashed",linewidth=0.3,color="#a60845")+
+  #scale_color_viridis_d()+
+  scale_color_gradient(low = "#a8bd3a",high = "#275477")+
+  scale_x_continuous(n.breaks = 10)+
+  theme_minimal()+
+  theme(plot.title = element_text(size=16))
+
+```
+
+
+```{r}
+ggsave("timeline.png",width = 9,height = 5,bg="white")
+```
+
+
+```{r}
+
+states <- map_data("state")
+
+state_names <- states%>%
+  filter(long > -125 & long < -110 ,lat > 30 & lat < 50) %>%
+  group_by(region)%>%
+  reframe(long=mean(range(long)),lat=mean(range(lat)))%>%
+  mutate(region=str_to_title(region))
+
+frog_data%>%
+  filter(year > 2000) %>%
+  mutate(year=as.factor(year))%>%
+  ggplot()+
+  geom_polygon(data=states,aes(long,lat,group=group),
+               fill="#bfd0dd",color="grey20")+
+  geom_text(data=state_names, mapping=aes(long,lat,label=region))+
+  geom_point(aes(long,lat,fill=year),shape=21,stroke=0.5)+
+  coord_quickmap(xlim=c(-125,-110),ylim=c(30,50))+
+  labs(fill="Year")+
+  theme_minimal()+
+  theme(axis.text = element_blank(),
+        axis.title = element_blank())
+```
+
+```{r}
+ggsave("map.png")
+```
+
+
+```{r cache=TRUE}
+library(cowplot)
+
+ggdraw()+
+  draw_image("timeline.png")+
+  draw_image("map.png",scale=0.6,x=0.11,y=0.05)+
+  draw_label("April 29, 2014:\nU.S. Fish and Wildlife Service declares\nSierra Nevada Yellow-Legged Frog\nspecies in danger of extinction",hjust = 0,
+             x=0.7,y=0.8,size=6)+
+  draw_label("Sierra Nevada Yellow-Legged Frog\nRana Muscosa once the most abundant frog in the Sierra Nevada\nis now critically endangered, yellow-legged frogs\nhave declined dramatically and they are now found\nin fewer than 7 percent of their historic localities. ",
+             hjust = 0,
+             x=0.02,y=0.08,size=6)
+```
+
+```{r}
+ggsave("final.png")
+```
+

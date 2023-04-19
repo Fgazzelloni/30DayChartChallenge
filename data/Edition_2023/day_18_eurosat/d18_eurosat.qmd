@@ -109,6 +109,8 @@ ggplot()+
 
 Zooming in
 
+source: <https://www.r-bloggers.com/2019/04/zooming-in-on-maps-with-sf-and-ggplot2/>
+
 ```{r}
 # polygons%>%View
 
