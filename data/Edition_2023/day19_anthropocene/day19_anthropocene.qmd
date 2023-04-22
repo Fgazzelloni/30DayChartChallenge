@@ -5,9 +5,7 @@ format: html
 editor: visual
 ---
 
-
 > Gazzelloni F. (2023), Data Visualization: Yellow-Legged Frog Anthropocene
-
 
 ```{r warning=FALSE,message=FALSE}
 library(tidyverse)
@@ -31,7 +29,6 @@ rana_muscosa <- occ(query = "Rana muscosa",
 rana_sierrae <- data.frame(rana_sierrae$gbif$data)
 rana_muscosa <- data.frame(rana_muscosa$gbif$data)
 ```
-
 
 ```{r}
 rana_sierrae <- rana_sierrae %>%
@@ -67,7 +64,6 @@ frog_data_yr <- rana_muscosa %>%
   reframe(population = n())
 ```
 
-
 ```{r}
 # Plot population over time
 ggplot(frog_data_yr, aes(x = year, y = population,color=population))+
@@ -88,11 +84,9 @@ ggplot(frog_data_yr, aes(x = year, y = population,color=population))+
 
 ```
 
-
 ```{r}
 ggsave("timeline.png",width = 9,height = 5,bg="white")
 ```
-
 
 ```{r}
 
@@ -123,7 +117,6 @@ frog_data%>%
 ggsave("map.png")
 ```
 
-
 ```{r cache=TRUE}
 library(cowplot)
 
@@ -140,4 +133,3 @@ ggdraw()+
 ```{r}
 ggsave("final.png")
 ```
-
