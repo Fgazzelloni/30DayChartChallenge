@@ -1,0 +1,91 @@
+---
+title: "#30DayChartChallenge day24: Theme Day UN Woman"
+author: "Federica Gazzelloni"
+format: html
+editor: visual
+execute: 
+  warning: false
+  message: false
+---
+
+
+> Gazzelloni F. (2023), Data Visualization: UN Woman
+
+Data for this visualization is from the [un.org](https://population.un.org/), to download the data: [https://population.un.org/wpp/Download/Standard/Fertility/](https://population.un.org/wpp/Download/Standard/Fertility/).
+
+The theme for the challenge is **Theme Day: UN Woman** and I chosen a package made by **Cédric Vidonne**, which provides a ggplot2 theme and a set of colour palettes for making charts and graphics based on **UNHCR Data Visualization Guidelines**.
+
+To install the package:
+```{r}
+install.packages("remotes")
+remotes::install_github("vidonne/unhcrthemes")
+```
+
+
+Load necessary packages:
+```{r}
+library(tidyverse)
+library(scales)
+library(unhcrthemes)
+```
+
+
+Download and load the data:
+```{r}
+library(readxl)
+df <- read_excel("data/WPP2022_FERT_F04_BIRTHS_BY_5-YEAR_AGE_GROUPS_OF_MOTHER.xlsx", 
+    sheet = "Estimates", 
+    skip = 16)
+df%>%names
+```
+
+
+```{r}
+df1 <- df%>%
+  janitor::clean_names()%>%
+  pivot_longer(cols = 13:20)%>%
+  select(region=region_subregion_country_or_area,
+         year,name,value)%>%
+  mutate(value2=as.numeric(value),
+         value2=round(value2),
+         name=gsub("x","",name),
+         name=gsub("_","-",name))%>%
+  rename(age=name) %>%
+  filter(!is.na(year))
+
+df1%>%head;
+df1%>%dim
+```
+
+164160      4
+```{r}
+df1%>%summary()
+```
+
+
+```{r}
+options(scipen=999)
+df1%>%
+  filter(region=="WORLD",
+         year==2021) %>%
+  ggplot(aes(x = age, y = value2)) +
+  geom_bar(stat = "identity", fill = "#0072C6") +
+  labs(
+    title = "World: Number of births classified by five-year age groups of mother",
+    subtitle="Data are presented in thousands (K)",
+    x = "Age category",
+    y = "Value",
+    caption="DataSource:Fertility standard projections (population.un.org)\n#30DayChartChallenge day24: Theme Day: UN Woman | DataViz: Federica Gazzelloni"
+  ) +
+  scale_y_continuous(labels = label_number(suffix = "K", scale = 1e-3))+
+  unhcrthemes::theme_unhcr()
+```
+
+```{r}
+library(showtext)
+showtext.auto(enable = FALSE)
+ggsave("day_14_UNWoman.png",
+       bg="white",
+       width = 7,height = 5)
+```
+

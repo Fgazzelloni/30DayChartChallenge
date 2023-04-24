@@ -8,7 +8,6 @@ execute:
   message: false
 ---
 
-
 > Gazzelloni F. (2023), Data Visualization: Green energy
 
 As for the term "Green Energy", it typically refers to energy that is produced from renewable sources, such as wind, solar, hydro, and geothermal power.
@@ -83,4 +82,3 @@ df1 %>%#count(geo)%>%View
         strip.text = element_text(color="white"))
   
 ```
-
