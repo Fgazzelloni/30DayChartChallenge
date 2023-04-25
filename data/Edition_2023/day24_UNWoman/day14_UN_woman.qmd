@@ -8,29 +8,29 @@ execute:
   message: false
 ---
 
-
 > Gazzelloni F. (2023), Data Visualization: UN Woman
 
-Data for this visualization is from the [un.org](https://population.un.org/), to download the data: [https://population.un.org/wpp/Download/Standard/Fertility/](https://population.un.org/wpp/Download/Standard/Fertility/).
+Data for this visualization is from the [un.org](https://population.un.org/), to download the data: <https://population.un.org/wpp/Download/Standard/Fertility/>.
 
 The theme for the challenge is **Theme Day: UN Woman** and I chosen a package made by **Cédric Vidonne**, which provides a ggplot2 theme and a set of colour palettes for making charts and graphics based on **UNHCR Data Visualization Guidelines**.
 
 To install the package:
+
 ```{r}
 install.packages("remotes")
 remotes::install_github("vidonne/unhcrthemes")
 ```
 
-
 Load necessary packages:
+
 ```{r}
 library(tidyverse)
 library(scales)
 library(unhcrthemes)
 ```
 
-
 Download and load the data:
+
 ```{r}
 library(readxl)
 df <- read_excel("data/WPP2022_FERT_F04_BIRTHS_BY_5-YEAR_AGE_GROUPS_OF_MOTHER.xlsx", 
@@ -38,7 +38,6 @@ df <- read_excel("data/WPP2022_FERT_F04_BIRTHS_BY_5-YEAR_AGE_GROUPS_OF_MOTHER.xl
     skip = 16)
 df%>%names
 ```
-
 
 ```{r}
 df1 <- df%>%
@@ -57,11 +56,11 @@ df1%>%head;
 df1%>%dim
 ```
 
-164160      4
+164160 4
+
 ```{r}
 df1%>%summary()
 ```
-
 
 ```{r}
 options(scipen=999)
@@ -88,4 +87,3 @@ ggsave("day_14_UNWoman.png",
        bg="white",
        width = 7,height = 5)
 ```
-
