@@ -10,8 +10,6 @@ execute:
 
 > Gazzelloni F. (2023), Data Visualization: Global Change
 
-
-
 ```{r}
 library(tidyverse)
 # Install and load the covid19 package
@@ -27,7 +25,6 @@ head(covid_data)
 
 ```
 
-
 ```{r}
 covid_data%>%DataExplorer::profile_missing()
 ```
@@ -37,6 +34,7 @@ covid_data%>%
   slice()%>%
   glimpse()
 ```
+
 ```{r}
 df <- covid_data%>%
   filter(!is.na(longitude))%>%
@@ -63,8 +61,6 @@ p <- df%>%#count(facial_coverings)
   theme(plot.caption = element_text(hjust = 0.5))
 ```
 
-
-
 ```{r}
 library(gganimate)
 p_animated <- p +
@@ -81,4 +77,3 @@ p_animated <- p +
 anim_save("day25_GlobalChange.gif", 
           animate(p_animated, fps = 10, duration = 30))
 ```
-

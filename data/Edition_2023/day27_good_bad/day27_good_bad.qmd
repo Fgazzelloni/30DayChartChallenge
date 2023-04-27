@@ -1,0 +1,60 @@
+---
+title: "#30DayChartChallenge Day 27 Good/Bad"
+author: "Federica Gazzelloni"
+format: html
+editor: visual
+---
+
+> Gazzelloni F. (2023), Data Visualization: Wordcloud Good/Bad
+
+```{r}
+# Load the required packages
+library(wordcloud)
+library(tm)
+library(tidyverse)
+library(tidytext)
+
+# sample text dataset
+load("text.RData")
+
+# Create a corpus from the text dataset
+corpus <- Corpus(VectorSource(text))
+
+# Clean the corpus by removing stopwords and punctuation
+corpus <- tm_map(corpus, removePunctuation)
+corpus <- tm_map(corpus, removeWords, stopwords("english"))
+
+
+
+# Create a term-document matrix from the corpus
+tdm <- TermDocumentMatrix(corpus)
+
+# Convert the term-document matrix to a matrix
+m <- as.matrix(tdm)
+
+# Get the frequency of each term in the matrix
+v <- sort(rowSums(m), decreasing = TRUE)
+
+# Create a data frame with the terms and their frequency
+set.seed(1111)
+df <- data.frame(word = names(v), freq = v) %>%
+  inner_join(get_sentiments("bing"), by = "word") %>% #count(sentiment)
+  filter(sentiment %in% c("positive",
+                          "negative")) %>%
+  mutate(
+    color = ifelse(sentiment == "positive",
+                   "#250c5f", "#cf5f26")) %>%
+  sample_n(300)
+  
+                 
+#summary(colors$freq)
+png("wordcloud.png", res = 180)
+wordcloud(df$word, 
+          freq = df$freq, 
+          ordered.colors = TRUE,
+          random.color = FALSE,
+          min.freq = 1,
+          scale = c(5, 0.5), 
+          colors = df$color)
+dev.off()
+```
