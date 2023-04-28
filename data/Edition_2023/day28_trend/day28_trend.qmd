@@ -1,0 +1,126 @@
+---
+title: "#30DayChartChallenge Day 28 Trend"
+author: "Federica Gazzelloni"
+format: html
+editor: visual
+---
+
+
+> Gazzelloni F. (2023), Data Visualization: Australia GDP per capita Trend 
+
+```{r}
+library(fpp3)
+library(tidyverse)
+aus_economy <- global_economy |>
+  filter(Code == "AUS") |>
+  mutate(Pop = Population / 1e6,
+         GDP=GDP/Population)
+```
+
+```{r}
+aus_economy |>
+autoplot(GDP) +
+  labs(y = "Millions", title = "Australian population")
+```
+
+
+```{r}
+fit <- aus_economy |>
+  model(
+    AAN = ETS(Pop ~ error("A") + trend("A") + season("N"))
+  )
+
+```
+
+
+
+```{r}
+fc <- fit |> forecast(h = 10)
+```
+
+
+
+```{r}
+library(fable)
+library(tsibbledata)
+
+alpha_range <- seq(0.1, 0.9, by = 0.1)
+
+fits <- list() # create an empty list to store the model fits
+for (alpha in alpha_range) {
+  fit <- aus_economy %>%
+    model(ETS(GDP ~ error("A") +
+                trend("A", alpha = alpha) +
+                season("N")))
+  fits[[as.character(alpha)]] <- fit
+  # store the fit in the list using alpha as the key
+}
+```
+
+
+```{r}
+library(purrr)
+pred <-
+  map2_dfr(fits, 
+           alpha_range, 
+           ~ as_tibble(.x %>% augment() %>% mutate(alpha = .y))) %>%
+  select(Year,GDP,.fitted,alpha)
+
+pred%>%head
+```
+
+
+Animate
+
+```{r}
+colors=scales::hue_pal(l = 90)(9)
+my_colors <- c("#4E79A7", "#F28E2B", "#E15759", "#76B7B2", "#59A14F", "#EDC948", "#B07AA1", "#FF9DA7", "#9C755F")
+
+
+options(scipen = 999)
+library(gganimate)
+p <- aus_economy |>
+  autoplot(GDP,linewidth=1) +
+  geom_line(aes(
+    y = .fitted,
+    group = alpha,
+    col = factor(alpha)
+  ),
+  linewidth=1,
+  data = pred) +  
+  geomtextpath::geom_texthline(yintercept = mean(aus_economy$GDP),
+                               hjust=0.3,
+                               label="Avg value")+
+ transition_states(alpha,
+                   transition_length = 2,
+                   state_length = 1) +
+ ease_aes('linear') +
+  scale_y_continuous(expand = c(0,0),
+                     labels = scales::label_number(suffix = "K", scale = 1e-3))+
+  scale_x_continuous(n.breaks = 6)+
+  scale_color_manual(values=my_colors)+
+  labs(y = "GDP per capita",
+       x="Year",
+       color="Alpha",
+       title="Australia's GDP Exponential Smoothing model\nAlpha {closest_state}",
+       caption="#30DayChartChallenge Day 28 Trend | DataSource: {fpp3} global_economy\nDataViz: Federica Gazzelloni")+
+  ggthemes::theme_economist_white()+
+  theme(text=element_text(family="Roboto Condensed"),
+        plot.background = element_rect(color="gold",fill="gold"),
+        panel.background = element_rect(color="#efdaa0",fill="#efdaa0"))+
+    guides(color="none")
+
+```
+
+```{r}
+p
+```
+
+
+```{r}
+anim_save("day28_trend.gif", 
+          animate(p, fps = 10, duration = 10))
+```
+
+
+
