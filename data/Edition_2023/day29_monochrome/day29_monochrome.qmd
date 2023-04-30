@@ -209,7 +209,7 @@ ggtitle(label =text) +
 ```
 
 
-Here is the part where the layout design is done. Use `{patcwork}` for setting the area to combine the title with the map with the `area()` function. Then chack the result with the `plot()` function, as shown below:
+Here is the part where the layout design is done. Use `{patchwork}` for setting the area to combine the title with the map with the `area()` function. Then chack the result with the `plot()` function, as shown below:
 ```{r}
 library(patchwork)
 # area(t, l, b = t, r = l)
