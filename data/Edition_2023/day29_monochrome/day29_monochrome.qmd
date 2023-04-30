@@ -93,7 +93,7 @@ my_df2%>%
 ```
 
 
-This are the set that will be used in the Map. 
+These are the set that will be used in the Map. 
 
 - Base map layers
 ```{r}
