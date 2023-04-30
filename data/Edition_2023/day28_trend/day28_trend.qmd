@@ -5,8 +5,7 @@ format: html
 editor: visual
 ---
 
-
-> Gazzelloni F. (2023), Data Visualization: Australia GDP per capita Trend 
+> Gazzelloni F. (2023), Data Visualization: Australia GDP per capita Trend
 
 ```{r}
 library(fpp3)
@@ -23,7 +22,6 @@ autoplot(GDP) +
   labs(y = "Millions", title = "Australian population")
 ```
 
-
 ```{r}
 fit <- aus_economy |>
   model(
@@ -32,13 +30,9 @@ fit <- aus_economy |>
 
 ```
 
-
-
 ```{r}
 fc <- fit |> forecast(h = 10)
 ```
-
-
 
 ```{r}
 library(fable)
@@ -57,7 +51,6 @@ for (alpha in alpha_range) {
 }
 ```
 
-
 ```{r}
 library(purrr)
 pred <-
@@ -68,7 +61,6 @@ pred <-
 
 pred%>%head
 ```
-
 
 Animate
 
@@ -116,11 +108,7 @@ p <- aus_economy |>
 p
 ```
 
-
 ```{r}
 anim_save("day28_trend.gif", 
           animate(p, fps = 10, duration = 10))
 ```
-
-
-
