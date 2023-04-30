@@ -6,6 +6,8 @@
 
 #### Contributions (2022 competition): [chart challenge 2022](https://github.com/Fgazzelloni/30DayChartChallenge/tree/main/data/Edition_2022)
 
+#### Contributions (2023 competition): [chart challenge 2023](https://fgazzelloni.quarto.pub/30daychartchallenge/)
+
 # `#30DayChartChallenge Topics by Day`
 
 <p align="center">
