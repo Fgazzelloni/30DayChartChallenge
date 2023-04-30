@@ -1,10 +1,12 @@
 # 30DayChartChallenge
 
-## This is a competition that takes place every year in April. In this repository you'll find all my contributions to: [#30DayChartChallenge](https://fgazzelloni.quarto.pub/30daychartchallenge/).
+## This is a competition that takes place every year in April.<br>In this repository you'll find all my contributions to: [#30DayChartChallenge](https://fgazzelloni.quarto.pub/30daychartchallenge/).
 
 #### Contributions (2021 competition): [chart challenge 2021](https://github.com/Fgazzelloni/rstats-chart-challenge-2021)
 
 #### Contributions (2022 competition): [chart challenge 2022](https://github.com/Fgazzelloni/30DayChartChallenge/tree/main/data/Edition_2022)
+
+#### Contributions (2023 competition): [chart challenge 2023](https://fgazzelloni.quarto.pub/30daychartchallenge/)
 
 # `#30DayChartChallenge Topics by Day`
 

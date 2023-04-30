@@ -80,7 +80,7 @@ my_df2 <- df2 %>%
   distinct()
 ```
 
-Here is a double check of the City names differences in `map_data("county")` and the `Lyme disease dataset` (`my_df2`). I am going to leave 96 city names behind.
+Here is a double check of the City names differences in `map_data("county")` and the `Lyme disease dataset` (`my_df2`). I am going to leave some city names behind.
 
 ```{r}
 us_county_map <- map_data("county")
@@ -94,7 +94,8 @@ my_df2%>%
   filter(str_detect(subregion2,"yellowstone"))
 ```
 
-This are the set that will be used in the Map.
+These are the sets that will be used in the Map. 
+
 
 -   Base map layers
 
@@ -211,7 +212,8 @@ ggtitle(label =text) +
     )
 ```
 
-Here is the part where the layout design is done. Use `{patcwork}` for setting the area to combine the title with the map with the `area()` function. Then chack the result with the `plot()` function, as shown below:
+
+Here is the part where the layout design is done. Use `{patchwork}` for setting the area to combine the title with the map with the `area()` function. Then check the result with the `plot()` function, as shown below:
 
 ```{r}
 library(patchwork)
