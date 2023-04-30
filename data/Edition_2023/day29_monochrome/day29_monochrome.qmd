@@ -8,6 +8,7 @@ editor: visual
 > Gazzelloni F. (2023), Data Visualization: Lyme Disease Map
 
 Load libraries
+
 ```{r}
 #| warning: false
 #| message: false
@@ -17,6 +18,7 @@ library(tidyverse)
 Data for this visualization is from **CDC**: <https://www.cdc.gov/lyme/stats/survfaq.html>
 
 This is old dataset, it is updated at 2011. I had a look at it, then used the most updated one.
+
 ```{r}
 library(jsonlite)
 
@@ -48,17 +50,16 @@ my_df <- df %>%
 my_df%>%head
 ```
 
+This data contains **County-level Lyme disease data from 2001-2020**
 
-
-This data contains **County-level Lyme disease data from 2001-2020** 
 ```{r}
 url2 <- "https://www.cdc.gov/lyme/resources/datasurveillance/LD-Case-Counts-by-County-01-20.csv"
 
 df2 <- read.csv(url2)
 ```
 
-
 Tidy data, the **Ctyname** vector is the one I want to use for looking at the cases by cities. I had to leave some information behind.
+
 ```{r}
 my_df2 <- df2 %>%
   select(1:2,6:25)%>%
@@ -80,6 +81,7 @@ my_df2 <- df2 %>%
 ```
 
 Here is a double check of the City names differences in `map_data("county")` and the `Lyme disease dataset` (`my_df2`). I am going to leave 96 city names behind.
+
 ```{r}
 us_county_map <- map_data("county")
 subregion <- us_county_map%>%count(subregion)%>%select(-n)%>%unlist()
@@ -92,16 +94,17 @@ my_df2%>%
   filter(str_detect(subregion2,"yellowstone"))
 ```
 
+This are the set that will be used in the Map.
 
-This are the set that will be used in the Map. 
+-   Base map layers
 
-- Base map layers
 ```{r}
 us_state_map <- map_data("state")
 us_county_map <- map_data("county")
 ```
 
-- Cases layer
+-   Cases layer
+
 ```{r}
 my_us_county_map <- map_data("county")%>%
   filter(subregion%in%subregion2)
@@ -120,8 +123,8 @@ df_jitter <- my_df_coords%>%
   distinct()
 ```
 
-
 Change the facet lables:
+
 ```{r}
 lbl <- my_df2 %>% 
   group_by(Years)%>%
@@ -137,8 +140,8 @@ lbl <- my_df2 %>%
   unlist()
 ```
 
-
 Set the fonts:
+
 ```{r}
 library(showtext)
 library(sysfonts)
@@ -146,8 +149,8 @@ sysfonts::font_add_google("David Libre","David Libre")
 sysfonts::font_add_google("Syne Mono","Syne Mono")
 ```
 
-
 Make the Map:
+
 ```{r}
 showtext_auto()
 p <-ggplot()+
@@ -178,13 +181,13 @@ p <-ggplot()+
 ```
 
 Have a look at the Map:
+
 ```{r}
 p
 ```
 
-
-
 Set some information about the **Lyme disease**, and use `ggtitle()` for making a title plot to use in the main plot **layout**.
+
 ```{r}
 library(ggtext)
 text <- "Lyme disease is caused by bacteria called Borrelia burgdorferi, which is spread to people through the bite of several types of blacklegged ticks. In the United States, most infections occur in Eastern states, Northern midwestern states, and West Coast. Recent estimates using other methods suggest that approximately 476,000 people may get Lyme disease each year in the United States."
@@ -208,8 +211,8 @@ ggtitle(label =text) +
     )
 ```
 
-
 Here is the part where the layout design is done. Use `{patcwork}` for setting the area to combine the title with the map with the `area()` function. Then chack the result with the `plot()` function, as shown below:
+
 ```{r}
 library(patchwork)
 # area(t, l, b = t, r = l)
@@ -221,15 +224,15 @@ design <- c(
 plot(design)
 ```
 
-
-
 Finally, combine all together in one plot:
+
 ```{r}
 title + p + plot_layout(design = design) &
   theme(plot.background = element_rect(fill="#192d40",color="#192d40"))
 ```
 
 And save it!
+
 ```{r}
 ggsave("p.png",width = 9,height = 7,dpi=320,bg="#192d40")
 ```
