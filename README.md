@@ -2,6 +2,8 @@
 
 ## This is a competition that takes place every year in April.<br>In this repository you'll find all my contributions to: [#30DayChartChallenge](https://fgazzelloni.quarto.pub/30daychartchallenge/).
 
+[![Poster 2023](images/@fgazzelloni.png)](https://fgazzelloni.quarto.pub/30daychartchallenge/)
+
 #### Contributions (2021 competition): [chart challenge 2021](https://github.com/Fgazzelloni/rstats-chart-challenge-2021)
 
 #### Contributions (2022 competition): [chart challenge 2022](https://github.com/Fgazzelloni/30DayChartChallenge/tree/main/data/Edition_2022)
@@ -19,7 +21,7 @@
 ### These are the contribution for 2022
 
 | Day |           Theme            | Data                                                                                                                                 | my contribution                                                       |
-|:---:|:--------------------------:|:-------------------------------------------------------------------------------------------------------------------------------------|:----------------------------------------------------------------------|
+|:-------------:|:-------------:|:----------------------------|:--------------|
 |  1  |       part-to-whole        | [Collegiate Sports Budgets](https://github.com/rfordatascience/tidytuesday/blob/master/data/2022/2022-03-29/readme.md)               | ![png](data/Edition_2022/day1_part_to_whole/day1_part-to-whole.png)   |
 |  2  |         pictogram          | [Accidental deaths](https://www.statista.com/statistics/529312/sweden-number-of-accidental-deaths-by-type-and-gender/)               | ![png](data/Edition_2022/day2_pictogram/day2_pictogram.png)           |
 |  3  |         historical         | [DuBoisChallenge 2022 - N°8](https://github.com/ajstarks/dubois-data-portraits/tree/master/challenge/2022)                           | ![png](data/Edition_2022/day3_historical/day3_historical.png)         |
