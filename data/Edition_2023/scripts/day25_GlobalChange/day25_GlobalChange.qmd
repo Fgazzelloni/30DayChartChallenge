@@ -1,0 +1,79 @@
+---
+title: "#30DayChartChallenge day25: Global Change"
+author: "Federica Gazzelloni"
+format: html
+editor: visual
+execute: 
+  warning: false
+  message: false
+---
+
+> Gazzelloni F. (2023), Data Visualization: Global Change
+
+```{r}
+library(tidyverse)
+# Install and load the covid19 package
+# install.packages("COVID19")
+library(COVID19)
+
+
+# Get global COVID-19 data
+covid_data <- covid19(data_source = "jhu", level = 1)
+
+# View the first few rows of the data
+head(covid_data)
+
+```
+
+```{r}
+covid_data%>%DataExplorer::profile_missing()
+```
+
+```{r}
+covid_data%>%
+  slice()%>%
+  glimpse()
+```
+
+```{r}
+df <- covid_data%>%
+  filter(!is.na(longitude))%>%
+  select(date,longitude,latitude,population,confirmed,deaths,recovered,facial_coverings)
+
+df %>% head
+```
+
+```{r cache=TRUE}
+world <- map_data("world")%>%
+  filter(!region=="Antarctica")
+
+p <- df%>%#count(facial_coverings)
+  ggplot(aes(longitude,latitude))+
+  geom_polygon(data=world,mapping=aes(x=long,y=lat,group=group),
+               fill=NA,color="grey")+
+  geom_point(aes(color=facial_coverings))+
+  scale_color_viridis_c()+
+  labs(color="Facial Covering",
+       title="Covid-19 Global Change in Population's Usage of Facial Coverings",
+       caption="Covid-19 Global Change in Population's Usage of Facial Coverings\nDataSource: COVID19 package (https://covid19datahub.io ) Guidotti and Ardia (2020)\n#30DayChartChallenge Day25 Global Change | Animation: Federica Gazzelloni") +
+  coord_quickmap()+
+  ggthemes::theme_map()+
+  theme(plot.caption = element_text(hjust = 0.5))
+```
+
+```{r}
+library(gganimate)
+p_animated <- p +
+  transition_time(date) +
+  ease_aes('linear') +
+  labs(title = 'Date: {frame_time}')
+
+# Render the animation
+# animate(p_animated, fps = 10, duration = 30)
+```
+
+```{r cache=TRUE}
+# Save the animation as a GIF
+anim_save("day25_GlobalChange.gif", 
+          animate(p_animated, fps = 10, duration = 30))
+```

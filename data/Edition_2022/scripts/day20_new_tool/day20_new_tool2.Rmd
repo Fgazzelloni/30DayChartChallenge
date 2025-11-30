@@ -1,0 +1,27 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+
+library(tidyverse)
+
+peace <- read_csv("R_general_resources/EDA/30DayChartChallenge/data/Edition_2022/day20_new_tool/un-peacekeeping-forces.csv")
+```
+
+```{r}
+df <- peace%>%select(-Entity,-Code)%>%
+  janitor::clean_names()%>%
+  rename(peacekeeping_n=size_of_total_peacekeeping_force_united_nations_peacekeeping)
+```
+
+```{r}
+write_csv(df,"peacekeeping.csv")
+```
+

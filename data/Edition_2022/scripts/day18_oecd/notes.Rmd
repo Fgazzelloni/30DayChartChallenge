@@ -1,0 +1,152 @@
+---
+title: "OEDC data"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Source:
+
+- https://www.oecd-ilibrary.org/environment/data/oecd-environment-statistics/air-transport-co2-emissions_13d4f295-en
+- https://stats.oecd.org/viewhtml.aspx?datasetcode=AIRTRANS_CO2&lang=en
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+library(readr)
+airtransport <- read_csv("AIRTRANS_CO2_19042022233714776.csv")
+
+airtransport%>%head
+```
+
+```{r}
+options(scipen = 999)
+df <- airtransport%>%
+  janitor::clean_names()%>% #count(flight_type)
+  select(pollutant,country,time,value,frequency=frequency_2,flight_type)%>%
+  mutate(value=round(value))
+```
+
+```{r}
+df%>%count(time)
+```
+
+
+182 countries
+pollutant CO2
+years from 2013 to 2021
+frequency is Annual, monthly and quaterly
+flight_type is all flights, freight flights, passenger flights
+```{r}
+
+# df1 <- df%>%
+#   mutate(time=as.integer(substr(time, 1, 4)))%>%
+#   distinct()
+
+df_yr <- df %>%
+  filter(time==as.integer(substr(time, 1, 4)))%>%
+  distinct()
+
+
+# count(country)
+my_countries <- df_yr %>%
+  group_by(country)%>%
+  summarize(tot_value_per_country=round(mean(value)))%>%
+  arrange(-tot_value_per_country)%>%
+  ungroup()%>%
+  slice(1:10)%>%
+  select(country)%>%
+  unlist()
+  
+df2 <- df_yr %>%
+  filter(country%in%my_countries)
+df2
+```
+
+```{r}
+df2 %>%
+  filter(!flight_type=="All flights") %>%
+  ggplot(aes(x=factor(time),y=value,group=country))+
+  geom_jitter(alpha=0.5,shape=21,stroke=1,aes(fill=flight_type))+
+  scale_y_continuous(labels=scales::comma,
+                oob=scales::censor,
+                trans="log10")+
+  ggthemes::theme_fivethirtyeight()
+```
+
+
+```{r}
+library(extrafont)
+# loadfonts()
+library(hrbrthemes)
+library(tvthemes)
+library(ggthemes)
+library(geomtextpath)
+geomtextpath::geom_textpath()
+```
+
+```{r}
+df3 <- df2 %>%
+  group_by(time,country)%>%
+  mutate(tot_value=mean(value)) %>%
+  ungroup()
+
+
+geomtextpath::geom_labelline()
+
+df3 %>%
+  filter(!country%in%c("Canada","Japan")) %>%
+  ggplot(aes(x=factor(time),y=tot_value/1000,label=country,group=country))+
+  geom_textline(aes(color=country),
+                size=4,
+                linewidth = 2,
+                show.legend = F)+
+  scale_y_log10(labels=scales::comma)+
+  labs(title="")+
+  tvthemes::scale_color_attackOnTitan()+
+  ggthemes::theme_fivethirtyeight()+
+    theme(legend.position = "none")
+```
+
+```{r}
+df3 %>%
+  mutate(country=ifelse(country=="China (People's Republic of)","China",country))%>%#count(country)
+  ggplot(aes(tot_value))+
+  geom_textdensity(aes(label=country), # color="red"
+                     size = 6, 
+                     fontface = 2, #fontfamily= "Chelsea Market",
+                     hjust = 0.2, 
+                     vjust = 0.3,
+                     show.legend = F) + 
+  facet_wrap(~country,scales = "free")+
+  theme_void()
+   scale_color_hilda() + #palette = "Day",n=6, type = "discrete",reverse=T
+  tvthemes::theme_avatar(text.font = "Times", title.font = "Times",
+                         legend.font = "Times")+
+  theme(axis.text.x = element_blank())
+
+```
+```{r}
+df3 %>%
+  mutate(country=ifelse(country=="China (People's Republic of)","China",country))%>%
+  mutate(country=fct_reorder(country,tot_value))%>%
+  ggplot(aes(tot_value,label = country, color=country)) +
+  geom_textdensity(show.legend = F,
+                     size = 6, 
+                     fontface = 2, #fontfamily= "Chelsea Market",
+                     hjust = 0.2, 
+                     vjust = 0.3
+                     ) +
+  facet_wrap(~country,scales = "free")+
+  theme_void()+
+  theme(strip.text = element_blank())
+   scale_color_hilda() + #palette = "Day",n=6, type = "discrete",reverse=T
+  tvthemes::theme_avatar(text.font = "Times", title.font = "Times",
+                         legend.font = "Times")+
+  theme(axis.text.x = element_blank())
+```
+

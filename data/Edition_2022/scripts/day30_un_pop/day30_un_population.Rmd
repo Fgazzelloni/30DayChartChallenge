@@ -1,0 +1,132 @@
+---
+title: "Day30 UN population"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+library(readr)
+
+unpop<-read_csv(("WPP2019_TotalPopulationBySex.csv"))
+```
+```{r}
+unpop
+```
+
+
+```{r}
+unpop%>%DataExplorer::profile_missing()
+```
+
+
+
+```{r}
+df <- unpop %>%
+  janitor::clean_names()%>%
+  filter(!is.na(location)) #%>% DataExplorer::profile_missing()
+```
+275175      4
+
+```{r}
+options(scipen = 999)
+df1 <- df %>%
+  select(location,time,pop_total,pop_density)
+
+
+  df1%>%
+    ggplot(aes(x=time,y=pop_total,group=location)) +
+    geom_line(data=df1%>%filter(time<=2021)) +
+    geom_point(data=df1%>%filter(time>2021),size=0.2) 
+  
+    theme_dark()
+```
+
+
+```{r}
+top_1950_location <- df1 %>%
+  filter(time==1950) %>%
+  count(location,time,pop_total)%>%
+  arrange(-pop_total) %>%
+  slice(1:10) %>%
+  select(location) %>%
+  unlist()
+```
+
+```{r}
+df2 <- df1 %>% filter(location %in% top_1950_location) 
+  
+
+df2 <- df1 %>%filter(location=="UNICEF REGIONS") 
+df2 <- df1 %>%filter(location=="United Nations Member States") 
+
+  
+  df2 %>%
+  ggplot(aes(x=time,y=pop_total,group=location)) +
+    geom_line(data=df2%>%filter(time<=2021)) +
+    geom_point(data=df2%>%filter(time>2021),size=0.2)
+```
+```{r}
+library(extrafont)
+# loadfonts()
+library(showtext)
+#showtext.auto()
+showtext.opts(dpi=320)
+```
+
+
+```{r}
+df3 <- df1 %>%
+  filter(str_detect(location,regex("United Nations", ignore_case = TRUE))) %>%
+  filter(!location=="UNITED NATIONS Regional Groups of Member States")
+
+df3 %>% count(location)
+   
+plot <- df3 %>%
+  ggplot(aes(x=time,y=pop_total/100000,group=location)) +
+   #geomtextpath::geom_textpath(data=df3%>%filter(time<=2021),aes(label=location),size=3) 
+  geomtextpath::geom_textline(aes(label=location),
+                              linewidth=1.5,
+                              size=4.2,hjust=1,color="white") +
+  #scale_x_continuous(expand = c(0,1))+
+  labs(y="UN POPULATION",x="TIME",
+       caption="#30DayChartChallenge 2022 #Day30 data day: UN Population | DataSource: UN | DataViz: Federica Gazzelloni (@fgazzelloni)",
+       xlim(1950,2100))+
+  tvthemes::theme_brooklyn99() +
+  theme(text = element_text(family="Roboto Condensed"),
+        plot.caption = element_text(hjust=0),
+        plot.caption.position = "panel",
+        panel.grid = element_blank(),
+        axis.title.y = element_text(size=70,hjust=1,vjust=0.2),
+        axis.text.y = element_blank(),
+        axis.line.x = element_line(color="white",linetype="solid",size=0.1),
+        axis.ticks.x = element_line(size=20,color="white"),
+        plot.margin = margin(10,10,10,10,"pt"))+
+  annotate("text",label="2019 projection revision includes nine different\nvariants to explore the implications of alternative\nfuture scenarios of population change.\n193 countries are United Nations Member States.\nThe Holy See (Vatican City) has not chosen\nto become part of the international organization.",
+           size=3.5,
+           x=1945,y=102,hjust=0,color="white")
+```
+
+```{r}
+library(ggpubr)
+
+ggpubr::ggarrange(plot)
+```
+
+
+```{r}
+ggsave("day30_dataday_un.png",
+       scale=1.2,
+       width = 8.41, height =5.94,
+       limitsize=TRUE)
+```
+
+
+       

@@ -1,0 +1,207 @@
+---
+title: "day17 connections"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# STEM is science, technology, engineering, and mathematics.
+sources:
+- https://ncses.nsf.gov/pubs/nsb20221/u-s-and-global-stem-education-and-labor-force
+- https://ncses.nsf.gov/pubs/nsb20212/data
+
+
+extraresources:
+- https://www.bls.gov/oes/topics.htm#stem
+- https://www.aauw.org/resources/research/the-stem-gap/
+- https://ngcproject.org/resources/state-girls-and-women-stem
+- https://blog.dol.gov/2022/02/10/women-and-girls-in-growing-stem-jobs
+- https://www.stemwomen.com/blog/2021/01/women-in-stem-percentages-of-women-in-stem-statistics
+- https://www.jmu.edu/stemcenter/career-list-compiled.shtml
+
+```{r}
+library(tidyverse)
+library(scales)
+library(glue)
+library(ggbump)
+library(showtext)
+font_add_google("Roboto Condensed", "roboto condensed")
+font_add_google("Oswald", "oswald")
+font_add_google("Share Tech Mono", "techmono")
+showtext_opts(dpi = 320)
+showtext_auto(enable = TRUE)
+```
+
+```{r}
+scientists <- readxl::read_excel("~/Documents/R/WomenInSTEM/nsb20212-tabslbr-024_scientists.xlsx",
+                                 na = "0", skip = 3)
+scientists1 <- scientists[-1,]%>%
+  janitor::clean_names() %>%#names
+  rename(female_perc=x4,male_perc=x6) %>%
+  mutate(female=ifelse(female=="s",0,female),
+         female_perc=ifelse(female_perc=="s",0,female_perc),
+         male=ifelse(male=="s",0,male),
+         male_perc=ifelse(male_perc=="s",0,male_perc),
+         total=ifelse(total=="s",0,total)) %>%
+  mutate(across(-occupation,as.numeric))
+
+scientists1%>%head
+```
+
+```{r}
+scientists1%>%count(occupation)
+```
+
+
+
+```{r}
+employed <- readxl::read_excel(here::here("~/Documents/R/WomenInSTEM/nsb20212-tabslbr-025_employed.xlsx"), 
+                               na = "0", 
+                               skip = 3)
+employed1 <- employed[-1,] %>%
+  janitor::clean_names()%>% #filter(str_detect(field_of_s_e_highest_degree,"Eco"))
+  rename(female_perc=x4,male_perc=x6,education=field_of_s_e_highest_degree) %>%
+  mutate(female=ifelse(female=="s",0,female),
+         female_perc=ifelse(female_perc=="s",0,female_perc),
+         male=ifelse(male=="s",0,male),
+         male_perc=ifelse(male_perc=="s",0,male_perc),
+         total=ifelse(total=="s",0,total)) %>%
+    mutate(across(-education,as.numeric)) %>%
+    arrange(education) %>%
+  group_by(education) %>%
+  mutate(across(.cols = everything(),list(mean = mean, median = median)))%>%
+  select(education,contains("mean")) %>%
+  distinct() %>%
+  setNames(gsub("_mean", "", names(.))) 
+
+                
+
+employed1%>%head
+```
+
+
+```{r}
+scientists2 <- scientists1%>%
+  select(occupation,
+         female_occ=female,
+         male_occ=male) #%>%
+  #count(occupation)
+  
+
+scientists2%>%head
+```
+
+```{r}
+employed2 <- employed1 %>%
+  select(education,
+         female_edu=female,
+         male_edu=male) #%>% count(education)
+
+employed2 <- employed2 %>% 
+  arrange(education)%>%
+  mutate(occupation=education,.after=education)
+```
+
+
+```{r}
+df <- scientists2 %>%
+  full_join(employed2,by="occupation") %>%
+  distinct()%>%
+  relocate(education) 
+
+# df %>%View
+
+```
+
+
+
+#---------
+
+
+```{r}
+df1 <- df %>%
+  filter(!str_detect(occupation,"All"))%>%
+  mutate(occupation=as.factor(occupation),
+         education=as.factor(education),
+         tot_occ=female_occ+male_occ,
+         tot_edu=female_edu+male_edu,
+         occupation=fct_reorder(occupation,-tot_occ),
+         education=fct_reorder(education,-tot_edu))
+
+df1%>% count(occupation,sort=T)
+```
+
+```{r}
+library(modelr)
+df3 <-df2%>%
+  arrange(-tot_occ)%>%
+  select(occupation,tot_occ,female_occ,male_occ)%>%
+  mutate(female_occ=-female_occ)%>%
+  arrange(-male_occ)%>%
+  slice(1:10) %>%
+  pivot_longer(cols=c("female_occ","male_occ"),names_to="gender",values_to="values_occ") 
+
+df4<- df3 %>%
+  mutate(label=as.character(values_occ),
+         label=gsub("-","",label),
+         label=paste0("$",label))
+
+
+
+df4%>%
+  ggplot(aes(x=values_occ, y=fct_reorder(occupation,tot_occ)))+
+  geom_col(width = 0.5)+
+  modelr::geom_ref_line(v = 0,size = 2, colour = "white") +
+  geom_text(aes(label=label),
+            nudge_x = 0.5 ,vjust=-0.8,hjust=1.2)+
+  scale_x_continuous(expand = c(0.1,1))+
+  theme_classic()
+```
+
+
+
+
+
+
+
+#--------
+
+
+
+
+
+```{r}
+
+df2 %>%
+  slice(1:10)%>%
+ggplot()+
+  
+    geom_segment(aes(x = -0.5, xend = -2, y = index_occ, yend = index_occ), 
+               color = "grey50", linetype = "13") +
+    geom_label(aes(x = -0.5, y = index_occ, label = occupation), 
+               hjust = 1, color = "grey90", label.size = 0, 
+               fill = "grey20", size = 4.5, family = "roboto condensed") +
+    
+    geom_text(aes(x = 2.8, y = index_occ+10, label = occupation), 
+            hjust = 0, color = "grey90", size = 4.5) +
+  
+    geom_text(aes(x = 1.15, y = index+5, label = occupation), 
+            color = "grey90", family = "oswald", size = 4.5) +
+  
+  
+  
+  theme_void() +
+  theme(plot.background = element_rect(fill = "grey20", color = NA),
+        plot.title = element_text(family = "oswald", size = 20, color = "grey80", hjust = 0.5, face = "bold", margin = margin(10,0,0,0)),
+        plot.caption = element_text(family = "techmono", color = "grey80", size = 12, hjust = 0.98, margin = margin(0,0,5,0)),
+        legend.position = c(0.8, 0.13),
+        legend.direction = "horizontal",
+        legend.title = element_text(size = 12, color = "grey80"),
+        legend.text = element_text(size = 10, color = "grey80"))
+```
+
+
+

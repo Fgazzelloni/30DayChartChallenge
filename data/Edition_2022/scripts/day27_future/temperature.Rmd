@@ -1,0 +1,52 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r libs_mod2, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(lubridate)
+library(prophet)
+```
+
+```{r}
+new <- read_csv("2960933.csv")
+```
+
+
+```{r}
+new_temps <- new%>%
+  select(6:11) %>%
+  janitor::clean_names()
+
+  mutate(date=as.POSIXct(date),
+    year=lubridate::year(date),.after=date) 
+```
+
+
+```{r}
+library(mgcv)
+library(tidymv)
+model <- gam(tavg~prcp+snow +tmax+tmin,data=new_temps)
+summary(model)
+```
+
+
+```{r}
+model_p <- predict_gam(model)
+```
+
+
+```{r}
+model_p %>%
+  ggplot(aes(tmax, fit)) +
+  geom_point()
+
+  geom_smooth_ci()
+```
+

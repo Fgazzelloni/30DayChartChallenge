@@ -1,0 +1,137 @@
+---
+title: "#30DayChartChallenge Day 30 World Bank"
+author: "Federica Gazzelloni"
+format: html
+editor: visual
+---
+
+> Gazzelloni F. (2023), Data Visualization: World Bank
+
+Source: [World Bank](https://data.worldbank.org)
+
+World Bank: <https://datacatalog.worldbank.org/>
+
+To download the data from the World Bank we need {wbstats} package <https://gshs-ornl.github.io/wbstats/>.
+
+```{r eval=TRUE}
+#| message: false
+#| warning: false
+#| library(tidyverse)
+library(rnaturalearth)
+library(leaflet)
+library(DT)
+
+# remotes::install_github("nset-ornl/wbstats")
+library(wbstats)
+```
+
+This function helps locating the data from the database, we need to specify the language of the data.
+
+    ?wb_cache
+
+```{r}
+#| eval: false
+list <- wb_cache("en")
+```
+
+```{r}
+#| eval: false
+wb_search(pattern = "poverty")%>%
+  filter(str_detect(indicator,"poverty"))
+```
+
+**Multidimensional poverty index (scale 0-1)** Updated data `2023-03-30`
+
+```{r}
+data <- wb_data(indicator="SI.POV.MDIM.XQ")
+data %>%pull(date)%>%range()
+```
+
+Check missing values:
+
+```{r}
+data %>% DataExplorer::profile_missing()
+```
+
+```{r}
+df <- data %>%
+  group_by(iso2c,iso3c,country)%>%
+  reframe(index=round(mean(as.numeric(SI.POV.MDIM.XQ),na.rm = TRUE),2))%>%
+  mutate(index=ifelse(is.nan(index),NA,index),
+         index_cat=cut_interval(index,5))
+
+df <- df%>%as.data.frame()
+```
+
+
+
+```{r}
+map <- ne_countries()
+map$index <- df[match(map$iso_a3, df$iso3c), "index"] 
+map$index_cat <- df[match(map$iso_a3, df$iso3c), "index_cat"]
+```
+
+
+
+### Map
+
+```{r}
+pal <- colorFactor(
+  palette = c("#dfd1bf","#e1a95f","orange","#FF7F7F","dark red"), 
+  domain = map$index_cat,
+  na.color = NA,
+  reverse = FALSE
+)
+```
+
+
+
+```{r}
+m <- leaflet(map,
+        options = leafletOptions(zoomControl = FALSE,
+                                 minZoom = 2, maxZoom = 2,
+                                 dragging = FALSE)) %>%
+  addTiles() %>%
+  setView(lng = 0, lat = 0, zoom = 2) %>%
+  addPolygons(stroke = TRUE,
+              weight = 0.2,
+              smoothFactor = 0.1, 
+              fillOpacity = 0.8,
+              fillColor = ~ pal(index_cat),
+              label = labels,
+              color = ~ pal(index_cat))%>%
+  leaflet::addLegend("bottomright",
+                     pal = pal, 
+                     values = ~index_cat,
+                     na.label = "missing",
+                     opacity = 0.9, 
+                     title = "Index"
+  )%>%
+  addControl("Multidimensional poverty index (scale 0-1)<br>Updated data 2023-03-30", 
+             position = "topleft")%>%
+  addControl("Source: WorldBank {wbstats}: SI.POV.MDIM.XQ<br>#30DayChartChallenge Day 30: WorldBank | Map: Federica Gazzelloni", 
+             position = "bottomleft")
+  
+m
+```
+
+
+
+```{r}
+library(htmlwidgets)
+library(webshot)
+
+
+
+## save html to png
+saveWidget(m, "temp.html", selfcontained = FALSE,
+           title = "#30DayChartChallenge World Bank")
+webshot("temp.html", 
+        vheight = 500,
+        vwidth = 800,
+        zoom = 3,
+        expand = c(10, 50, 0, 50),
+        file = "day30_worldbank.png",
+        cliprect = "viewport")
+```
+

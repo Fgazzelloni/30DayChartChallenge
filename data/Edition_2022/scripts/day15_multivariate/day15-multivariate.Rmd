@@ -1,0 +1,491 @@
+---
+title: "#30DayChartchallenge #Day15 -Multivariate"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,message=FALSE, warning=FALSE, paged.print=FALSE,comment = "")
+```
+
+```{r }
+library(tidyverse)
+library(ISLR2)
+# data()
+```
+
+Mid-Atlantic Wage Data
+
+Wage and other data for a group of 3000 male workers in the Mid-Atlantic region.
+```{r}
+Wage%>%names
+```
+
+```{r}
+summary(Wage)
+```
+
+```{r}
+wage1 <- Wage %>%
+  mutate(across(where(is.factor),as.character)) %>% #count(region)
+  mutate(maritl_id=gsub("\\D","",maritl),
+         race_id=gsub("\\D","",race),
+         education_id=gsub("\\D","",education),
+         jobclass_id=gsub("\\D","",jobclass),
+         health_id=gsub("\\D","",health),
+         health_ins_id=gsub("\\D","",health_ins)) %>%
+  select(-maritl,-race,-education,-region,-jobclass,-health,-health_ins) %>%
+  mutate(across(where(is.character),as.integer)) 
+```
+
+
+```{r}
+tmwr_cols <- colorRampPalette(c("#91CBD765", "#CA225E"))
+wage1 %>%
+  cor() %>% 
+  corrplot::corrplot(col = tmwr_cols(200), tl.col = "black") +
+  ggplot2::facet_wrap(~wage)
+```
+
+```{r}
+library(tidymodels)
+tidymodels_prefer()
+
+library(corrplot)
+library(ggforce)
+library(bestNormalize)
+```
+
+
+```{r}
+set.seed(1701)
+split <- initial_split(wage1, strata = wage, prop = 3/4)
+
+train <- training(split)
+test  <- testing(split)
+
+set.seed(1702)
+val <- validation_split(train, strata = wage, prop = 4/5)
+val$splits[[1]]
+```
+
+```{r}
+rec <-
+  # Use the training data from the val split object
+  recipe(wage ~ ., data = analysis(val$splits[[1]])) %>%
+  step_select(-logwage)%>%
+  step_zv(all_numeric_predictors()) %>%
+  step_orderNorm(all_numeric_predictors()) %>% 
+  step_normalize(all_numeric_predictors())
+```
+
+
+```{r}
+rec_trained <- prep(rec)
+
+show_variables <- 
+  rec %>% 
+  prep(log_changes = TRUE)
+
+validation <- val$splits %>% pluck(1) %>% assessment()
+val_processed <- bake(rec_trained, new_data = validation)
+```
+```{r}
+rec%>%prep()%>%bake(new_data=NULL) %>%
+  broom::tidy()
+```
+
+```{r}
+library(ggdist)
+library(distributional)
+rec%>%prep()%>%bake(new_data=NULL) %>%
+  broom::tidy() %>%
+  filter(!column=="wage")%>%
+  ggplot(aes(x=column))+
+  geom_col(aes(y=mean))
+  
+```
+
+
+
+
+```{r}
+library(ggdist)
+library(distributional)
+
+Wage_age_cat <- Wage %>%#count(age)
+  mutate(age_cat=cut(age,breaks = 5)) %>% #count(race)
+  select(-age,-logwage) 
+
+# average calculation
+mod <- glm(wage~ education+race+age_cat+maritl-1,family = "gaussian",data=Wage_age_cat)
+
+
+mod%>%
+  tidy() %>% 
+  mutate(term0=case_when(str_detect(term,"education")~"education",
+                         str_detect(term,"race")~"race",
+                         str_detect(term,"maritl")~"maritl",
+                         str_detect(term,"age_cat")~"age_cat",
+                         TRUE~term)) %>%
+  mutate(term1=gsub("^[A-z]+\\d. ","",term)) %>%
+  ggplot(aes(y = fct_reorder(term1,estimate),
+             xdist = dist_student_t(df = df.residual(mod), 
+                               mu = estimate, 
+                               sigma = std.error))
+             ) +
+  ggdist::stat_halfeye()+
+  stat_dots(position = "dodge")+ # , color = "pink"
+  facet_wrap(vars(term0),scales = "free")+
+  tvthemes::scale_color_hilda()+
+  tvthemes::theme_theLastAirbender()
+```
+
+
+```{r}
+mod%>%
+  tidy() %>% 
+  mutate(term0=case_when(str_detect(term,"education")~"education",
+                         str_detect(term,"race")~"race",
+                         str_detect(term,"maritl")~"maritl",
+                         str_detect(term,"age_cat")~"age_cat",
+                         TRUE~term)) %>%
+  mutate(term1=gsub("^[A-z]+\\d. ","",term)) %>%
+  
+  ggplot(aes(y = fct_reorder(term1,estimate),
+             xdist = dist_student_t(df = df.residual(mod), 
+                               mu = estimate, 
+                               sigma = std.error))
+             ) +
+  ggdist::stat_halfeye()+
+  stat_dots(position = "dodge")+ # , color = "pink"
+  facet_wrap(vars(term0),scales = "free")+
+  tvthemes::scale_color_hilda()+
+  tvthemes::theme_theLastAirbender()
+```
+
+
+
+```{r}
+Wage%>%
+  mutate(race=as.character(race)) %>%
+ggplot()+
+  aes(x=wage,y=race)+
+  ggdist::geom_dotsinterval(layout="weave",side="bottom")+
+ ggdist::stat_halfeye()
+```
+
+```{r}
+library(extrafont)
+loadfonts()
+
+Wage %>%
+  mutate(education=gsub("\\d. ","",education)) %>% #count(year)
+  group_by(education)%>%
+  mutate(mean=mean(wage),
+         sd=sd(wage)) %>%
+  ungroup() %>% # pull(mean)%>%summary
+  select(education,mean,sd) %>%
+  distinct()%>%
+  ggplot(aes(y=fct_reorder(education,mean),
+             xdist = dist_normal(mean, sd),
+             layout = "weave",
+             fill = stat(x < 111.70))) + 
+  stat_dots(position = "dodge", color = "grey70")+
+  geom_vline(xintercept = 111.70, alpha = 0.25) +
+  scale_x_continuous(breaks = c(20,60,90,112,140,180,220)) +
+  tvthemes::scale_fill_hilda()+
+  labs(x="Wage values from 2003 to 2009",
+       y="",color="Race",fill="wage < avg",
+       title="Wage distribution vs education 2003-2009",
+       subtitle="Normalized values",
+       caption="#30DayChartChallenge 2022 #day9 - Distribution/Statistics - v2\nDataSource: {ISLR2} Wage dataset | DataViz: Federica Gazzelloni")+
+  tvthemes::theme_avatar()+
+  theme(text = element_text(family="Chelsea Market"),
+        legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(0.5,units="cm"),
+        legend.direction = "horizontal",
+        legend.position = c(0.8,0.1))
+```
+
+
+```{r}
+ggsave("education.png")
+```
+
+
+
+```{r}
+Wage %>%
+  mutate(education=gsub("\\d. ","",education)) %>% #count(year)
+  group_by(education)%>%
+  mutate(mean=mean(wage),
+         sd=sd(wage)) %>%
+  ungroup() %>%
+  ggplot(aes(x = wage, 
+             y =fct_reorder(education,wage),color=race)) +
+  stat_dots(side = "both",size=2.5)+
+  scale_color_brewer(palette = "Dark2") +
+  xlim(20,200)+
+  labs(x="Wage values from 2003 to 2009",
+       y="",color="Race")+
+  tvthemes::theme_theLastAirbender()+
+  theme(legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(0.5,units="cm"),
+        legend.direction = "horizontal",
+        legend.position = c(0.2,0.97))
+```
+
+
+```{r}
+plot_validation_results <- function(recipe, 
+                                    dat = assessment(val$splits[[1]])) {
+  recipe %>%
+    # Estimate any additional steps
+    prep() %>%
+    # Process the data (the validation set by default)
+    bake(new_data = dat) %>%
+    # Create the scatterplot matrix
+    ggplot(aes(x = .panel_x, y = .panel_y, col = wage, fill = wage)) +
+    geom_point(alpha = 0.4, size = 0.5) +
+    geom_autodensity(alpha = .3) +
+    facet_matrix(vars(-wage), layer.diag = 2) +
+    viridis::scale_color_viridis(option = "A") + 
+     viridis::scale_fill_viridis(option = "A")
+}
+```
+
+
+```{r}
+rec_trained %>%
+  step_pca(all_numeric_predictors(), num_comp = 4) %>%
+  plot_validation_results() + 
+  ggtitle("Principal Component Analysis")+
+  tvthemes::theme_theLastAirbender()
+```
+
+
+```{r}
+rec_trained %>%
+  step_pls(all_numeric_predictors(), outcome = "wage", num_comp = 4) %>%
+  plot_validation_results() + 
+  ggtitle("Partial Least Squares")+
+  tvthemes::theme_theLastAirbender()
+```
+
+
+```{r}
+rec_trained %>%
+  step_ica(all_numeric_predictors(), num_comp = 4) %>%
+  plot_validation_results() + 
+  ggtitle("Independent Component Analysis")+
+  tvthemes::theme_theLastAirbender()
+  
+```
+
+
+
+```{r}
+Wage%>%
+  mutate(age1=cut(age,5),.after=age)%>%
+  mutate(year=as.factor(year))%>%
+  ggplot(aes(year,wage,group=year))+
+  geom_violin()+
+ # facet_wrap(~age1)+
+  tvthemes::theme_theLastAirbender()
+```
+
+```{r}
+p1 <- Wage%>%#names
+  ggplot(aes(age,logwage,color=maritl,fill=maritl))+
+    geom_jitter(size=0.5,alpha=0.5,shape=21,stroke=0.5)+
+  geom_smooth(size=0.5,se=F)+#,color="darkred")+
+  labs(title="\n")+
+  scale_color_hilda(palette = "Day",n=6, type = "discrete",reverse=T) +
+  tvthemes::theme_theLastAirbender(text.font = "Times", title.font = "Times",
+                    legend.font = "Times")+
+  theme(axis.text.x = element_blank(),
+        legend.position = "top")
+p1
+```
+
+
+```{r}
+library(extrafont)
+loadfonts()
+library(hrbrthemes)
+library(tvthemes)
+library(ggthemes)
+library(geomtextpath)
+geomtextpath::geom_textpath()
+
+p2 <-Wage%>%
+  pivot_longer(cols = c("year","age","wage"),names_to="names",values_to="values")%>%
+ggplot(aes(values))+
+    geom_textdensity(aes(label=names,color="red"),size = 6, 
+                     fontface = 2, #fontfamily= "Chelsea Market",
+                     hjust = 0.2, vjust = 0.3,
+                     show.legend = F) +
+  facet_wrap(~names,scales = "free")+
+   scale_color_hilda(palette = "Day",n=6, type = "discrete",reverse=T) +
+  tvthemes::theme_theLastAirbender(text.font = "Times", title.font = "Times",
+                    legend.font = "Times")+
+  theme(axis.text.x = element_blank())
+p2
+```
+
+
+```{r}
+library(ggdist)
+Wage%>%
+  pivot_longer(cols = c("year","age","wage"),names_to="names",values_to="values")%>%
+ggplot(aes(values))+
+geom_slabinterval()
+```
+
+```{r}
+library(cowplot)
+final <- ggdraw()+
+  draw_plot(p1) +
+  draw_plot(p2,scale=0.5)
+
+
+
+```
+
+
+```{r}
+ggpubr::annotate_figure(
+  final,
+  top = "Ciao",
+  bottom = "addio",
+  left = "align",
+  right = "ok",
+  fig.lab = "a",
+  fig.lab.pos = c("top.left", "top", "top.right", "bottom.left", "bottom",
+    "bottom.right"),
+  fig.lab.size=2,
+  fig.lab.face="bold"
+)
+
+```
+
+
+
+
+```{r}
+Wage%>%#names
+  ggplot(aes(race,wage))+
+    geom_col()+
+  coord_polar(theta = "y")
+```
+
+
+```{r}
+Wage%>%#names
+  ggplot(aes(education,wage))+
+    geom_col()+
+  coord_polar(theta = "x")
+```
+
+```{r}
+
+```
+
+
+
+```{r}
+Wage%>%
+  mutate(maritl=gsub("\\d. ","",maritl))%>%
+ggplot(aes(maritl))+
+    geom_textdensity(aes(label=maritl,color=maritl),size = 6, 
+                     fontface = 2, #fontfamily= "Chelsea Market",
+                     hjust = 0.2, vjust = 0.3,
+                     show.legend = F) +
+ # facet_wrap(~names,scales = "free")+
+   scale_color_hilda(palette = "Day",n=6, type = "discrete",reverse=T) +
+  tvthemes::theme_theLastAirbender(text.font = "Times", title.font = "Times",
+                    legend.font = "Times")+
+  theme(axis.text.x = element_blank())
+```
+
+
+```{r}
+Wage%>%
+  mutate(race=gsub("\\d. ","",race))%>%
+ggplot(aes(race))+
+    geom_textdensity(aes(label=race,color=race),size = 6, 
+                     fontface = 2, #fontfamily= "Chelsea Market",
+                     hjust = 0.2, vjust = 0.3,
+                     show.legend = F) +
+ # facet_wrap(~names,scales = "free")+
+  scale_color_hilda(palette = "Day",n=6, type = "discrete",reverse=T) +
+  tvthemes::theme_theLastAirbender(text.font = "Times", title.font = "Times",
+                    legend.font = "Times")+
+  theme(axis.text.x = element_blank())
+```
+
+```{r}
+Wage%>%#count(education)
+  mutate(education=gsub("\\d. ","",education),
+         education=case_when(education=="< HS Grad"~"Under graduate",
+                             education=="Advanced Degree"~"Degree",
+                             TRUE~"Graduate"))%>%
+ggplot(aes(race))+
+    geom_textdensity(aes(label=education,color=education),
+                     size = 6, 
+                     fontface = 2,
+                     hjust = 0.2, vjust = 0.3,
+                     show.legend = F) +
+ # facet_wrap(~names,scales = "free")+
+  scale_color_hilda(palette = "Day",n=6, type = "discrete",reverse=T) +
+  facet_wrap(~education)+
+  tvthemes::theme_theLastAirbender(text.font = "Times", title.font = "Times",
+                    legend.font = "Times")+
+  theme(axis.text.x = element_blank())
+```
+
+```{r}
+library(hrbrthemes)
+library(ggthemes)
+library(extrafont)
+extrafont::loadfonts()
+fonts()
+```
+
+
+```{r}
+tvthemes::import_chelseaMarket()
+Wage%>%
+  select(wage,age,race)%>%
+  distinct()%>%
+  ggplot(aes(x=wage,y=age,shape=race))+
+         geom_point(aes(size=wage,color=race))+
+         geom_smooth(method=lm,se=FALSE,
+                     fullrange=TRUE,
+                  aes(color=race))+
+  scale_x_log10()+
+  scale_y_log10()+
+  xlim(20,250)+
+  labs(title="Multivariate Wage Analysis - age and race",
+       subtitle="Years: 2003 to 2009",
+       caption="#30DayChartChallenge 2022 #day15 - Multivariate\nDataSource: {ISLR2} Wage dataset | DataViz: Federica Gazzelloni",
+       shape="Race",color="Race",size="Wage",
+       x="Wage",y="Age")+
+  ggthemes::scale_shape_tableau()+
+  ggthemes::scale_color_tableau()+
+  ggthemes::theme_pander()+
+  theme(text = element_text(family="Chelsea Market"))
+
+```
+
+```{r}
+ggsave("day15_multivariate.png",
+       dpi=320,
+       width = 9,
+       height = 6)
+```
+

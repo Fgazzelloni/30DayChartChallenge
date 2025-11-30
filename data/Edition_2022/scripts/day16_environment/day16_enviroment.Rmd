@@ -1,0 +1,278 @@
+---
+title: "day16_enviroment"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+indoor_pollution <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-04-12/indoor_pollution.csv')
+fuel_gdp<- read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-04-12/fuel_gdp.csv")
+death_timeseries<-read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-04-12/death_timeseries.csv")
+death_source<-read.csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-04-12/death_source.csv")
+```
+```{r}
+# indoor_pollution;
+# fuel_gdp;
+# death_timeseries;
+# death_source
+```
+
+```{r}
+indoor_pollution1 <- indoor_pollution%>%
+  rename(Deaths_age.std.pct=`Deaths - Cause: All causes - Risk: Household air pollution from solid fuels - Sex: Both - Age: Age-standardized (Percent)`,
+Year_death=Year) %>%
+  janitor::clean_names()
+
+indoor_pollution1%>%head
+```
+
+
+
+```{r}
+fuel_gdp1 <- fuel_gdp%>%
+  rename(Clean.fuels="Access.to.clean.fuels.and.technologies.for.cooking....of.population.",
+         GDP="GDP.per.capita..PPP..constant.2017.international...",
+         Pop="Population..historical.estimates.",
+         Year_fuel=Year) %>%
+  janitor::clean_names() 
+
+fuel_gdp1 %>%head
+```
+
+
+```{r}
+deaths_pct <- indoor_pollution1 %>%
+  right_join(fuel_gdp1,by=c("year_death"="year_fuel","entity","code"))%>%
+  janitor::clean_names()
+
+df <- deaths_pct%>%
+  filter(!is.na(deaths_age_std_pct),
+         !is.na(clean_fuels),
+         !is.na(gdp)) %>%
+  select(-continent)
+  
+# DataExplorer::profile_missing()
+df %>%head
+```
+
+```{r}
+df%>%glimpse()
+```
+
+```{r}
+library(countrycode)
+df$continent <- countrycode(df$entity,
+                            origin= "country.name",
+                            destination = "continent")
+
+
+df%>% filter(is.na(continent)) %>% count(entity)
+```
+
+
+```{r}
+df <- df %>%
+  filter(!entity%in%c("Micronesia (country)","Timor","World")) 
+```
+
+
+```{r}
+df%>%
+  head
+```
+
+```{r}
+
+death_plot <- df %>%
+  mutate(year=cut(year_death,5),.after=year_death) %>%
+  group_by(year)%>%
+  mutate(mean=mean(deaths_age_std_pct),
+         sd=sd(deaths_age_std_pct)) %>%
+  ungroup() %>% # pull(mean)%>%summary
+  select(year,mean,sd) %>%
+  distinct()%>%
+  ggplot(aes(y=fct_reorder(year,mean),
+             xdist = distributional::dist_normal(mean, sd),
+             layout = "weave",
+             fill = stat(x < 5.094))) + 
+  ggdist::stat_dots(position = "dodge", color = "grey70")+
+  geom_vline(xintercept = 5.094, alpha = 0.25) +
+  scale_x_continuous() +
+  tvthemes::scale_fill_hilda()+
+  labs(x="",
+       y="",color="",
+       title="Deaths",
+       subtitle="",
+       Caption="#30DayChartChallenge 2022 #day16 - Enviroment\nDataSource: Indoor Air Pollution | DataViz: Federica Gazzelloni")+
+  tvthemes::theme_avatar()+
+  theme(legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(0.5,units="cm"),
+        legend.direction = "horizontal",
+        legend.position = c(0.8,0.1))
+death_plot
+```
+
+```{r}
+df%>%head
+```
+
+
+```{r}
+fuel_plot <- df %>%
+  mutate(year=cut(year_death,5),.after=year_death) %>%
+  group_by(year)%>%
+  mutate(mean=mean(clean_fuels),
+         sd=sd(clean_fuels)) %>%
+  ungroup() %>% #pull(mean)%>%summary
+  select(year,mean,sd) %>%
+  distinct()%>%
+  ggplot(aes(y=fct_reorder(year,mean),
+             xdist = distributional::dist_normal(mean, sd),
+             layout = "weave",
+             fill = stat(x < 62.04))) + 
+  ggdist::stat_dots(position = "dodge", color = "grey70")+
+  geom_vline(xintercept = 62.04, alpha = 0.25) +
+  scale_x_continuous() +
+  tvthemes::scale_fill_hilda()+
+  labs(x="",
+       y="",color="",
+       title="Fuel",
+       subtitle="",
+       Caption="#30DayChartChallenge 2022 #day16 - Environment\nDataSource: Indoor Air Pollution | DataViz: Federica Gazzelloni")+
+  tvthemes::theme_avatar()+
+  theme(legend.background = element_blank(),
+        legend.box.background = element_blank(),
+        legend.key = element_blank(),
+        legend.key.width = unit(0.5,units="cm"),
+        legend.direction = "horizontal",
+        legend.position = c(0.8,0.1))
+```
+
+
+```{r}
+library(patchwork)
+death_plot|fuel_plot
+
+```
+
+```{r}
+df
+```
+
+```{r}
+df%>%count(entity)
+```
+
+
+```{r}
+library(rnaturalearth)
+world <- ne_countries(returnclass = "sf")
+
+world%>%
+  right_join(df,by=c("name"="entity"))%>% select(name) %>%
+  sf::st_drop_geometry() %>%
+  count(name)
+
+df1 <- world%>%
+  select(name)%>%
+  right_join(df,by=c("name"="entity"))
+```
+
+
+```{r}
+
+map <- ggplot(data = world) +
+  geom_sf(size=0.5)+
+  geom_sf(data=df1,
+          mapping=aes(geometry=geometry,fill=deaths_age_std_pct),
+          size=0.1)+
+  coord_sf(xlim = c(-180.0,180.0), ylim = c(-60.0,90.0), expand = FALSE)+
+  labs(fill="Deaths (%)",
+       title="Deaths caused by Indoor Air Pollution") +
+  tvthemes::scale_fill_gravityFalls(178,type="continuous")+
+  tvthemes::theme_hildaDay() +
+  theme(axis.text = element_blank(),
+        axis.ticks = element_blank(),
+        legend.background = element_blank(),
+        legend.position = c(0.1,0.3),
+        plot.background = element_rect(color="beige",fill="beige"))
+```
+
+
+```{r}
+ggsave("map.png",dpi=320,width = 9,height = 6)
+```
+
+
+```{r}
+options(scipen = 999)
+lines <- ggplot(df, aes(x = clean_fuels, y = deaths_age_std_pct)) +
+     geom_point(aes(fill=entity),
+                size = 0.5,
+                shape=21,color="grey70",
+                show.legend = F) + 
+     geom_smooth(aes(color = as.factor(year_death)),
+                 size=0.2,show.legend = F,se=F)+
+     geom_label(data=df%>%
+                filter(year_death=="2009")%>%
+                group_by(continent)%>%
+                mutate(deaths_age_std_pct=max(deaths_age_std_pct),
+                                        clean_fuels=max(clean_fuels))%>%
+                arrange(-deaths_age_std_pct)%>%
+                slice(1:1)%>%
+                ungroup() ,
+                aes(label=entity),
+                position = "identity",
+                vjust=0.5,hjust="right",
+                size=2,
+                inherit.aes = T,
+                check_overlap = T)+
+     #scale_x_log10()+
+     #scale_y_log10(breaks=seq(0,23,5))+
+     facet_wrap(vars(continent),scales = "free",ncol = 5)+
+     #tvthemes::scale_fill_gravityFalls()+
+     tvthemes::scale_colour_gravityFalls()+
+     tvthemes::theme_hildaDay() +
+     theme(legend.position = "none",
+           plot.background = element_rect(color="midnightblue",fill="beige"),
+           panel.grid = element_line(size=0.05),
+           axis.text = element_blank(),
+           axis.title = element_blank())
+```
+
+
+```{r}
+ggsave("lines.png",
+       dpi=320,
+       width = 9,height = 4)
+```
+
+
+```{r}
+library(cowplot)
+library(extrafont)
+#loadfonts()
+
+ggdraw()+
+  draw_plot(map,y=0.2,
+            height = 0.6)+
+  draw_plot(lines,scale=0.5,
+            width = 2,height = 0.5,
+            x=-0.5,y=-0.2)
+
+```
+
+
+
+```{r}
+ggsave("day_16_enviroment.png",
+       dpi=320,
+       width = 9,height = 6)
+```
+

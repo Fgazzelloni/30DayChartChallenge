@@ -1,0 +1,98 @@
+---
+title: "What are the drivers for chosing between Auto and Manual trasmission based on fuel consumption?"
+author: Federica Gazzelloni
+date: 03 May 2022
+output: 
+  flexdashboard::flex_dashboard:
+    orientation: columns
+    vertical_layout: fill
+---
+
+```{r setup, include=FALSE}
+library(flexdashboard)
+library(tidyverse)
+library(patchwork)
+```
+
+Column {data-width=650}
+-----------------------------------------------------------------------
+
+### Chart A
+
+```{r}
+p <- mtcars %>%
+  ggplot(aes(x=mpg,color=factor(am)))+
+  geom_point(aes(y=wt))+
+  geom_point(aes(y=qsec))+
+  geom_smooth(aes(x=mpg,y=wt,color=factor(am)),size=0.5)+
+  geom_smooth(aes(x=mpg,y=qsec,color=factor(am)),size=0.5)+
+    coord_flip()
+
+
+p1<- mtcars %>%
+  ggplot(aes(x=wt,y=mpg))+
+  geom_point(aes(color=factor(am)))+
+  geom_smooth()
+
+p2<- mtcars %>%
+  ggplot(aes(x=qsec,y=mpg))+
+  geom_point(aes(color=factor(am)))+
+  geom_smooth()
+
+(p/(p1|p2)) & 
+  ggthemes::theme_fivethirtyeight() &
+theme(legend.position = "none",
+      axis.title.y = element_text())
+```
+
+Column {data-width=350}
+-----------------------------------------------------------------------
+
+### Chart B
+
+```{r}
+mtcars%>%
+  ggplot(aes(x=wt,y=mpg,color=factor(am)))+
+  geom_point()+
+  geom_smooth(se=F)+
+  scale_color_discrete(label=c("Auto","Man"))+
+   ggthemes::theme_fivethirtyeight()+
+  theme(axis.title.y = element_text())
+```
+
+### Chart C
+
+```{r}
+mtcars1 <- mtcars%>% #summary()
+  mutate(am=ifelse(am==0,"Automatic","Manual"),
+         am=as.factor(am))
+
+p1 <- mtcars1 %>%
+  ggplot(aes(x=am,y=mpg,group=am)) +
+  geom_boxplot(aes(fill=am),show.legend = F,alpha=0.5)+
+  geomtextpath::geom_texthline(aes(yintercept=mean(mpg)),label="average")+
+  scale_x_discrete(labels=c("Automatic","Manual"))+
+  labs(title="Boxplot: Miles/gallon vs Transmission",
+       x="Transmission",
+       y="Miles/gallon")+
+  theme(axis.title.x = element_text(hjust=1,vjust=-1.5,face="bold"))
+
+p2 <- mtcars1 %>%
+  ggplot(aes(x=am,y=mpg,group=am)) +
+  geom_violin(linetype="dotted",trim = F,scale = "width",aes(fill=am),alpha=0.2)+
+  geom_jitter(aes(fill=am),show.legend = F,alpha=0.5,size=3,shape=21)+
+  scale_x_discrete(labels=c("Automatic","Manual"))+
+  labs(title="Scatterplot: Miles/gallon vs Transmission",
+       x="Transmission",
+       y="Miles/gallon")+
+  theme(axis.title.y = element_blank(),axis.title.x = element_blank())
+(p1|p2) &  
+  ggthemes::theme_fivethirtyeight() &
+  theme(plot.title = element_text(size=11,face="bold"),
+        legend.position = "none",
+        axis.title.y = element_text())
+```
+
+
+
+

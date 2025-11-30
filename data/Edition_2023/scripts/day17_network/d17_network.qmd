@@ -1,0 +1,85 @@
+---
+title: "#30DayChartChallenge day17: Network"
+author: "Federica Gazzelloni"
+format: html
+editor: visual
+---
+
+To cite Federica's work please use:
+
+> Gazzelloni F. (2023), Data Visualization: Network Monks data 
+
+
+
+```{r}
+library(tidyverse)
+library(rethinking)
+data("Monks")
+d<- Monks
+```
+
+```{r}
+"amount of reciprocity in - like - nominations within dyads"
+" Nominations by 18 monks living in the same monastery over three time periods."
+"#30DayChartChallenge day17: Network | DataViz: Federica Gazzelloni"
+```
+
+```{r}
+d1 <- d%>%
+  select(!contains("dis"),-A,-B) %>%
+  mutate(name=paste0(A_name,"-",B_name))%>%
+  select(-A_name,-B_name)%>%
+  distinct()%>%
+  filter(like_AB>0,like_BA>0)
+  
+d1 %>% head() 
+```
+
+```{r}
+library(igraph)
+g <- graph_from_data_frame(d1)
+y <- as_adjacency_matrix(g)
+sng <- graph_from_adjacency_matrix(y)
+lx <- layout_nicely(sng)
+vcol <- "#dfd1bf"
+  
+set.seed(1973)
+plot(sng , 
+     layout=lx , 
+     vertex.size=12 , 
+     edge.arrow.size=0.5 , 
+     edge.width=2 ,
+     edge.curved=0.35 , 
+     vertex.color=vcol , 
+     edge.color="#6b493e" , 
+     
+     asp=0.9,
+     margin = -0.05 , 
+     vertex.label=d1$name,
+     vertex.label.cex = 0.7)
+```
+
+```{r}
+library(showtext)
+library(sysfonts) # this is included in showtext
+
+font_add_google("Pacifico", "Pacifico")
+showtext.auto()
+```
+
+```{r}
+library(cowplot)
+ggdraw()+
+  draw_image("network.png",scale = 0.9,y=-0.05)+
+  draw_label("Amount of reciprocity in - like - nominations within 18 monks",
+             x=0.5,y=0.95,fontfamily="Pacifico",size=44)+
+    draw_label("living in the same monastery over three time periods.",
+             x=0.5,y=0.90,fontfamily="Pacifico",size=44)+
+  draw_label("#30DayChartChallenge day17: Networks | DataViz: Federica Gazzelloni",
+             x=0.5,y=0.05,size=20,fontfamily="Pacifico")
+
+```
+
+```{r}
+ggsave("d17_networks.png",width = 7,height = 5,bg="white",dpi=320)
+```

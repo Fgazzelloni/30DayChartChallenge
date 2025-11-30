@@ -1,0 +1,157 @@
+---
+title: "chocolate"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+```{r}
+rm(list=ls())
+library(tidyverse)
+
+chocolate <- readr::read_csv('https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2022/2022-01-18/chocolate.csv')
+
+chocolate%>%names
+df <- chocolate%>% select(review_date,rating,cocoa_percent)
+
+df%>%#count(review_date)
+  ggplot(aes(x=review_date))+
+  geom_histogram(binwidth=0.5)+
+  geom_freqpoly(binwidth=1)+
+  scale_x_continuous(breaks=seq(2006,2021,3))
+```
+
+```{r}
+library(extrafont)
+# loadfonts()
+```
+
+```{r}
+df%>%
+  arrange(review_date) %>%
+  mutate(cocoa_percent=sub("%","",cocoa_percent),
+         cocoa_percent=as.integer(cocoa_percent))%>%
+  group_by(review_date)%>%
+  summarise_all(.funs = mean) %>% 
+  ungroup() %>% 
+  mutate(rating=(rating/sum(rating))*100)%>%
+  mutate(rating_sc=scale(rating),cocoa_sc=scale(cocoa_percent)) %>%
+  #filter(review_date%in%c(2007,2008))
+  filter(review_date%in%c(2011,2012))
+                         
+#2007-2008
+rat 
+1/(5.894628-6.096499)
+# [1] -4.953659
+coc
+1/(72.67391-72.08219)
+# [1] 1.689989
+
+#2011-2012
+rat 
+1/(6.249116-6.400915)
+# [1] -6.587659
+coc
+1/(71.55155-70.96933)
+# [1] 1.717564
+```
+
+
+```{r}
+df%>%
+  arrange(review_date) %>%
+  mutate(cocoa_percent=sub("%","",cocoa_percent),
+         cocoa_percent=as.integer(cocoa_percent))%>%
+  group_by(review_date)%>%
+  summarise_all(.funs = mean) %>% 
+  ungroup() %>% 
+  mutate(rating=(rating/sum(rating))*100)%>%
+  mutate(rating_sc=scale(rating),cocoa_sc=scale(cocoa_percent))%>%
+  pivot_longer(cols=c(rating_sc,cocoa_sc),names_to="names",values_to="values")%>%#pull(values)%>%range()
+  ggplot()+
+  geom_line(aes(x=review_date,y=values,group=names,color=names),
+            size=2,key_glyph = "timeseries")+
+  geom_rect(aes(xmin = 2007, 
+                xmax = 2008, 
+                ymin = min(values), 
+                ymax = max(values)),alpha=0.02,fill="pink")+
+  geom_rect(aes(xmin = 2011, 
+                xmax = 2015, 
+                ymin = min(values), 
+                ymax = max(values)),alpha=0.02,fill="pink")+
+  geom_rect(aes(xmin = 2017, 
+                xmax = 2019, 
+                ymin = min(values), 
+                ymax = max(values)),alpha=0.02,fill="pink")+
+  scale_x_continuous(breaks=c(2007,2008,2011,2015,2017,2019,2021))+
+  scale_color_viridis_d(labels=c("Cocoa(%)","Rating"))+
+  annotate("curve", x = 2005.4, xend = 2006.5, 
+           y = 1.4, yend = 0.9, 
+           curvature=0.5,
+           arrow = arrow(length = unit(0.3, "cm")),
+           colour = "#800080", size=1, alpha=0.6)+
+    annotate("text", x = 2006.2, y = 1.4, 
+             label="Cocoa(%)\nUP\n+1.7%", family="Arial Black",
+           colour = "#800080", size=4, alpha=0.6)+
+  annotate("text", x = 2007.8, y = -0.8, 
+             label="\n-5%", family="Arial Black",
+           colour = "#800080", size=4, alpha=0.6)+
+   annotate("text", x = 2011.9, y = -0.5, 
+             label="\n+1.8%", family="Arial Black",
+           colour = "#800080", size=4, alpha=0.6)+
+  annotate("text", x = 2012, y = 1, 
+             label="\n-6.6%", family="Arial Black",
+           colour = "#800080", size=4, alpha=0.6)+
+  
+    annotate("curve", x = 2011.5, xend = 2011.8, 
+           y = 0.8, yend = 0.3, 
+           curvature=-0.3,
+           arrow = arrow(length = unit(0.3, "cm")),
+           colour = "#800080", size=1, alpha=0.6)+
+  annotate("text", x = 2010.8, y = 1, 
+             label="Rating\nDOWN", family="Arial Black",
+           colour = "#800080", size=4, alpha=0.6)+
+  annotate("segment", x = 2005.4, xend = 2008.3, 
+           y = 2.9, yend = 2.9, 
+           colour = "#800080", size=7, alpha=0.6)+
+  annotate("text",x=2007,y=-3,parse=T,family="Arial Black",color="grey30",
+           label="Slope == frac(y[2]-y[2],x[2]-x[1])")+
+  coord_cartesian(ylim = c(-1.778707,1.780479), 
+                  xlim = c(2006,2021),clip = "off")+
+  labs(color="",title="Cocoa beans' Percent & Ratings",
+       subtitle = "Global AVG - scaled values",
+       caption="#30DayChartChallenge 2022 #Day21 - Down/Upwards
+       DataSource: #TidyTuesday 2022 week3 - Chocolate Bar ratings
+       DataViz: Federica Gazzelloni")+
+  ggthemes::theme_fivethirtyeight()+
+  theme(text = element_text(family="Arial Black"),
+        axis.text.x = element_text(size=11,face="bold"),
+        axis.text.y = element_blank(),
+        axis.ticks.x = element_line(size=3,lineend = "butt",color="grey50"),
+        axis.ticks.length.x = unit(6,units = "pt"),
+        axis.line.x = element_line(color="#800080",size=1),
+        plot.title = element_text(size=30),
+        plot.caption = element_text(color="grey30"),
+        plot.background = element_rect(fill="grey90",color="grey90"),
+        panel.background = element_rect(fill="grey95",color="grey90"),
+        legend.background = element_blank(),
+        legend.key = element_blank(),
+        legend.text = element_text(size=12,face="bold"))
+ggsave("cocoa.png",
+       dpi=320,
+       width = 8,
+       height = 6)
+```
+
+
+```{r}
+
+```
+
+
+
+

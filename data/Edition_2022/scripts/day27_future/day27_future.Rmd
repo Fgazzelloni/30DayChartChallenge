@@ -1,0 +1,287 @@
+---
+title: "Day27_future"
+output: html_document
+---
+
+```{r setup, include=FALSE, message=FALSE, warning=FALSE, paged.print=FALSE,comment=""}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+### Boston Weather data
+
+source: https://www.ncdc.noaa.gov/cdo-web/search
+- https://www.ncei.noaa.gov/orders/cdo/2960933.csv
+
+
+```{r libs_mod2, message=FALSE, warning=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(lubridate)
+library(prophet)
+```
+
+```{r data}
+new <- read.csv("https://www.ncei.noaa.gov/orders/cdo/2960933.csv")
+# new <-read.csv("2960933.csv")
+```
+
+
+```{r new_summary}
+new %>%
+  select(6:11) %>%
+  summary()
+```
+
+```{r new_temps}
+new_temps <- new%>%
+  select(6:11) %>%
+  janitor::clean_names()%>%
+  mutate(date=as.POSIXct(date),
+    year=lubridate::year(date),.after=date) 
+```
+
+
+```{r df_mod_new_temps}
+min_new_temps <- new_temps%>%select(ds=date,y=tmin)
+max_new_temps <- new_temps%>%select(ds=date,y=tmax)
+avg_new_temps <- new_temps%>%select(ds=date,y=tavg)
+```
+
+
+#### Min model
+```{r min_pro_mod_new_temps, cache=TRUE}
+min_mod_new_temps <- prophet(min_new_temps, 
+                             #growth = "logistic",
+                             seasonality.mode = "multiplicative",
+                             yearly.seasonality=2,
+                             daily.seasonality=T,
+                             weekly.seasonality = TRUE
+                             )
+
+min_future_new_temps <- prophet::make_future_dataframe(min_mod_new_temps, 
+                                                       freq = "week",
+                                                       periods=6,
+                                                       include_history = T)
+min_forecast_new_temps <- predict(min_mod_new_temps,min_future_new_temps)
+```
+
+```{r}
+# min_mod_new_temps <- prophet(weekly.seasonality=FALSE)
+# min_mod_new_temps <- add_seasonality(min_mod_new_temps, 
+#                                      name='yearly', 
+#                                      period=365, 
+#                                      fourier.order=3)
+# min_mod_new_temps <- fit.prophet(min_mod_new_temps, min_new_temps)
+# future <- make_future_dataframe(min_mod_new_temps, periods = 365)
+# forecast <- predict(min_mod_new_temps, future)
+# prophet_plot_components(min_mod_new_temps, forecast)
+```
+
+#### Max model
+```{r max_pro_mod_new_temps, cache=TRUE}
+max_mod_new_temps <- prophet(max_new_temps,
+                             #growth = "logistic",
+                             seasonality.mode = "multiplicative",
+                             yearly.seasonality=2,
+                             daily.seasonality=F,
+                             weekly.seasonality = TRUE
+                             )
+max_future_new_temps <- prophet::make_future_dataframe(min_mod_new_temps, 
+                                                       freq = "week",
+                                                       periods=6,
+                                                       include_history = T)
+max_forecast_new_temps <- predict(max_mod_new_temps,max_future_new_temps)
+```
+
+#### Avg model
+```{r avg_pro_mod_new_temps, cache=TRUE}
+avg_mod_new_temps <- prophet(avg_new_temps, #growth = "logistic",
+                             seasonality.mode = "multiplicative",
+                             yearly.seasonality=2,
+                             daily.seasonality=F,
+                             weekly.seasonality = TRUE
+                             )
+avg_future_new_temps <- prophet::make_future_dataframe(min_mod_new_temps, 
+                                                       freq = "week",
+                                                       periods=6,
+                                                       include_history = T)
+avg_forecast_new_temps <- predict(avg_mod_new_temps,avg_future_new_temps)
+```
+
+
+
+```{r min-and-max}
+min<-min_forecast_new_temps%>%
+  select(ds,yhat)%>%
+  mutate(name=rep("min",length(ds)))
+
+max <-max_forecast_new_temps%>%
+  select(ds,yhat)%>%
+  mutate(name=rep("max",length(ds)))
+
+#avg <-avg_forecast_new_temps%>%
+#  select(ds,yhat)%>%
+#  mutate(name=rep("avg",length(ds)))
+
+point_forecast <- rbind(min,max)%>%
+  filter(ds>Sys.time())
+
+min_forecast_new_temps%>%tail()
+```
+
+
+##### Make the plot with ggplot2
+```{r plot2_mod_new_temps}
+  ggplot()+
+  
+  geom_point(data=min_new_temps,mapping=aes(x=ds,y=y),size=0.2,color="navy") + # original data
+  geom_point(data=max_new_temps,mapping=aes(x=ds,y=y),size=0.2,color="navy") + # original data
+  geom_point(data=avg_new_temps,mapping=aes(x=ds,y=y),size=1,color="grey70",shape=21,stroke=1) + # original data
+  #geom_jitter(data=avg_new_temps,mapping=aes(x=ds,y=y),size=0.05,color="darkred") + #
+
+   geom_area(data=point_forecast,aes(x=ds,y=yhat),color="grey95",alpha=0.1)+
+   geom_ribbon(data=point_forecast,aes(x=ds,ymin=yhat,ymax=yhat+1),color="grey90",alpha=0.1)+
+   geom_point(data=point_forecast,aes(x=ds,y=yhat),shape=21,stroke=1,size=2,color="grey70")+
+  #scale_color_grey()+
+  
+  geom_line(data=min_forecast_new_temps,aes(ds,yhat),color="grey50",size=0.3) +
+  geom_line(data=max_forecast_new_temps,aes(x=ds,y=yhat),size=0.3,color="grey40")+
+  geom_line(data=avg_forecast_new_temps,aes(x=ds,y=yhat),size=0.5,color="grey20") +
+  
+  #geom_hline(data=avg_forecast_new_temps%>%filter(ds>Sys.time()),aes(yintercept=max(yhat)))+
+  # geom_hline(data=avg_forecast_new_temps%>%filter(ds>Sys.time()),aes(yintercept=min(yhat)))+
+  #geom_vline(data=avg_forecast_new_temps,aes(xintercept=Sys.time()),
+  #          size=1,linetype="dashed",color="navy")+
+    
+  #geom_label(data=avg_forecast_new_temps,aes(x=Sys.time(),y=60),
+  #           label=paste("Today:",Sys.Date()))+
+
+  geom_smooth(data=avg_forecast_new_temps,aes(x=ds,y=yhat), 
+              method = 'loess' , formula=y ~ x,alpha=0.3,size=0.5,fill="grey80",
+              linetype="dotted",color="navy") +
+  geom_text(data=point_forecast,aes(x=min(ds),y=0),
+            label="Data forecasting up to July 26th 2022",
+            hjust=-1)+
+  #scale_x_datetime(date_breaks = "1 month", date_labels = "%B")+
+  #scale_y_continuous(labels = seq(0,73,10))+
+  labs(title="Temperatures in Boston area",
+       subtitle="from January to April 2022 with forecasting (Prophet)",
+       caption="",
+       x="Year 2022 - Months", y="Temperature level (min/avg/max)")+
+  ggthemes::theme_stata()+
+  theme(text = element_text(size=18),
+        plot.title = element_text(size=28),
+        axis.title.x = element_text(hjust = 0),
+        axis.line = element_line(size=1),
+        axis.line.x = element_line(arrow = arrow(length = unit(0.3,"cm"))))
+```
+
+
+```{r}
+avg_forecast_new_temps%>%
+  filter(ds<Sys.time())%>%
+  select(ds,trend,yhat)
+```
+
+```{r}
+df_original<-avg_new_temps%>%
+  mutate(date=as.Date(ds),.after=ds)
+  
+df_original%>%
+ggplot(aes(x=date,y=y))+
+  geom_line()
+```
+
+```{r partials}
+df <- avg_forecast_new_temps%>%
+  mutate(date=as.Date(ds),.after=ds)
+df_min <- min_forecast_new_temps%>%
+  mutate(date=as.Date(ds),.after=ds)
+df_max <- max_forecast_new_temps%>%
+  mutate(date=as.Date(ds),.after=ds)
+```
+
+
+
+```{r}
+df_max%>%
+  filter(date>Sys.Date()-7)%>%
+  arrange(-yhat)%>%
+  select(ds,date,yhat)
+
+df%>%
+  filter(date>Sys.Date())%>%
+  arrange(date)%>%
+  select(ds,date,yhat)
+```
+
+
+```{r avg-mod-line}
+avg_mod_new_temps2 <- prophet(avg_new_temps, 
+                             #growth = "logistic",
+                             seasonality.mode = "multiplicative",
+                             yearly.seasonality=2,
+                             daily.seasonality=F,
+                             weekly.seasonality = TRUE
+                             )
+
+avg_future_new_temps2 <- prophet::make_future_dataframe(avg_mod_new_temps2, 
+                                                       freq = "week",
+                                                       periods=6,
+                                                       include_history = T)
+avg_forecast_new_temps2 <- predict(avg_mod_new_temps2,avg_future_new_temps2)
+```
+
+
+
+```{r final-plot}
+df %>%
+ggplot(aes(x=date,y=yhat))+
+  geom_smooth(color="navy",size=0.5)+
+  geom_line(data=df_original,aes(x=date,y=y))+
+  
+  geom_line(linetype="dotted",color="navy",size=0.8)+
+  
+  geomtextpath::geom_textline(data=df_min%>%filter(date>Sys.Date()-7),inherit.aes = T,label="min" )+
+  geomtextpath::geom_textline(data=df_max%>%filter(date>Sys.Date()-7),inherit.aes = T,label="max" )+
+  
+  geom_text(data=df%>%filter(date=="2022-05-03"),
+            aes(x=date,y=yhat,label=round(yhat)),vjust=-1,color="navy")+
+  geom_point(data=df%>%filter(date=="2022-05-03"),aes(x=date,y=yhat))+
+  
+  geom_segment(aes(x=Sys.Date()+2,xend=Sys.Date()+2, y=10,yend=yhat-4),
+                                 size=0.3,color="grey60")+
+  geom_text(aes(x=Sys.Date(),y=25,label="3rd May avg temperature level"),
+            color="navy",angle=90)+
+  
+  scale_x_date(expand = c(0,0))+
+  scale_y_continuous(breaks = seq(10,60,10))+
+  
+  coord_cartesian(ylim = c(10,60),clip="off")+
+  
+  annotate("text",x=Sys.Date()-120,y=-5.5,label="Forecast is made for educational purposes:\nthe AVG level of temperature takes consideration of\nweekly sesonality over 6 weeks period from 26th of April to the 7th of June 2022",
+           hjust=0,size=3)+
+  
+  labs(title="Forecast of the AVG Temperature level in Boston area",
+       subtitle="January to April 26th, 2022 - Future made with {Prophet}",
+       caption="#30DaychartChallege 2022 #Day27 - Future\nDataSource: NCDC-NOOA Climate data\nDataViz: Federica Gazzelloni (@fgazzelloni)",
+       x="Year 2022 - Months", y="Temperature level (min/avg/max)")+
+  ggthemes::theme_stata()+
+  theme(text = element_text(size=18),
+        plot.title = element_text(size=24),
+        plot.subtitle = element_text(size=12),
+        plot.caption = element_text(hjust=1,size=11),
+        axis.title.x = element_text(hjust = 0),
+        axis.title.y = element_text(hjust=0.5,vjust=2),
+        axis.line = element_line(size=1),
+        axis.line.x = element_line(arrow = arrow(length = unit(0.3,"cm"))))
+```
+
+```{r}
+ggsave("day27_future3.png",
+       dpi=320,
+       width = 9,
+       height = 6)
+```
+
+
